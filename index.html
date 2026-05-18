@@ -462,9 +462,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
 
 <script>
 // ── CONSTANTS ──
-const MS = ['Gate 1','Gate 2','Recipe Sign Off','MPC Creation','Artwork FTP','Ingredient PO','First Production','RTO','Digital Launch Date','Retail Launch Date','Marketing Launch Date'];
+const MS = ['Gate 1','Gate 2','Recipe Sign Off','MPC Creation','Artwork FTP','Ingredient PO','Gate 3','First Production','RTO','Digital Launch Date','Retail Launch Date','Marketing Launch Date'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-const STORE_KEY = 'trip_pm_v6';
+const STORE_KEY = 'trip_pm_v7';
 
 const UK_RETAILERS = ['Waitrose','Sainsbury\'s','Tesco','Boots','Holland & Barrett','Whole Foods','Selfridges','ASOS','Amazon UK','Ocado','Other'];
 const US_RETAILERS = ['Whole Foods','Target','Walmart','Sprouts','Amazon US','Erewhon','Thrive Market','Trader Joe\'s','Kroger','Other'];
@@ -490,7 +490,7 @@ if (!projects) {
       devNotes:'Quote attached for 2MT and 10MT.\n\nTRIP CIU Target: £28p/L',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-14'},'Digital Launch Date':{done:false,date:'2026-09-14'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-14'},'Digital Launch Date':{done:false,date:'2026-09-14'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
 
     { id:2, name:'Peach Revamp', region:'UK', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
@@ -504,7 +504,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
 
     { id:3, name:'Watermelon', region:'UK', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'2027-05-28',
@@ -518,7 +518,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-09-04'},'Ingredient PO':{done:false,date:'2026-09-04'},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-09-04'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}},
 
     // ── UK EPD ──
     { id:4, name:'Elderflower Mint MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
@@ -529,7 +529,7 @@ if (!projects) {
       devNotes:'',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
 
     { id:5, name:'Raspberry Orange Blossom MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'',
@@ -539,7 +539,7 @@ if (!projects) {
       devNotes:'',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
 
     // ── US NPD ──
     { id:6, name:'Frosted Blackberry', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
@@ -555,7 +555,7 @@ if (!projects) {
       devNotes:'US Pricing - https://drive.google.com/file/d/13SvOiiG84thsBj4d_Z2RuapikzgneRWa/view?usp=sharing',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-21'},'Digital Launch Date':{done:false,date:'2026-09-21'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-21'},'Digital Launch Date':{done:false,date:'2026-09-21'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
 
     { id:7, name:'Peach Revamp', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
@@ -568,7 +568,7 @@ if (!projects) {
       devNotes:'Liv to taste samples w/c 15/05',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
 
     { id:8, name:'Watermelon', region:'US', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'2027-05-28',
@@ -581,7 +581,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-08-21'},'Ingredient PO':{done:false,date:'2026-09-04'},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}}
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-08-21'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}}
 
   ];
   save();
