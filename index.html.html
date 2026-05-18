@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRIP — Project Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1C1C4C; --pink:#F8BED5; --cherry:#E9A4C4;
+  --white:#ffffff; --green:#16a34a; --red:#dc2626;
+  --gray:#64748b; --light-gray:#e2e8f0; --off-white:#fdf8fb;
+  --uk-band:#dbeafe; --us-band:#fef3c7;
+  --card-shadow:0 2px 20px rgba(28,28,76,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',Helvetica Neue,Arial,sans-serif;background:var(--off-white);color:var(--navy);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--navy);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(28,28,76,0.18);}
+.logo{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--pink);letter-spacing:6px;text-transform:uppercase;}
+.header-sub{font-size:11px;color:rgba(248,190,213,0.55);letter-spacing:3px;text-transform:uppercase;font-weight:300;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.btn-add{background:var(--pink);color:var(--navy);border:none;border-radius:20px;padding:8px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px;transition:background 0.2s,transform 0.15s;}
+.btn-add:hover{background:var(--cherry);transform:translateY(-1px);}
+.btn-hdr{background:rgba(248,190,213,0.13);border:1px solid rgba(248,190,213,0.22);color:var(--pink);border-radius:8px;padding:6px 13px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-hdr:hover{background:rgba(248,190,213,0.24);}
+.btn-hdr.active-mode{background:rgba(248,190,213,0.3);border-color:rgba(248,190,213,0.5);}
+.kbd-hint{font-size:9px;background:rgba(255,255,255,0.12);border-radius:3px;padding:1px 5px;color:rgba(248,190,213,0.6);font-family:monospace;margin-left:2px;}
+
+/* DASHBOARD */
+.dashboard{background:var(--navy);padding:0 40px 20px;display:flex;gap:14px;flex-wrap:wrap;}
+.dash-card{background:rgba(248,190,213,0.09);border:1px solid rgba(248,190,213,0.18);border-radius:10px;padding:12px 18px;min-width:100px;flex:1;}
+.d-val{font-family:'Playfair Display',Georgia,serif;font-size:26px;font-weight:700;color:var(--pink);line-height:1;}
+.d-lbl{font-size:10px;color:rgba(248,190,213,0.55);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+.dash-card.d-green .d-val{color:#86efac;}
+.dash-card.d-amber .d-val{color:#fcd34d;}
+.dash-card.d-red .d-val{color:#fca5a5;}
+.dash-card.d-purple .d-val{color:#c4b5fd;}
+
+/* BULK BAR */
+.bulk-bar{display:none;background:#2d2d6e;color:var(--white);padding:10px 40px;align-items:center;gap:12px;font-size:13px;border-bottom:1px solid rgba(248,190,213,0.2);}
+.bulk-bar.visible{display:flex;}
+.bulk-count{font-weight:600;}
+.bulk-status-select{border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:var(--white);border-radius:8px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.bulk-status-select option{color:var(--navy);background:var(--white);}
+.btn-bulk-apply{background:var(--pink);color:var(--navy);border:none;border-radius:16px;padding:5px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-bulk-cancel{background:transparent;color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* FILTER BAR */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--light-gray);padding:0 40px;display:flex;align-items:center;gap:8px;height:52px;overflow-x:auto;}
+.filter-label{font-size:11px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-right:4px;flex-shrink:0;}
+.filter-btn{border:1.5px solid var(--light-gray);background:transparent;color:var(--navy);border-radius:16px;padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.filter-btn.active,.filter-btn:hover{background:var(--navy);color:var(--white);border-color:var(--navy);}
+.filter-divider{width:1px;height:20px;background:var(--light-gray);margin:0 2px;flex-shrink:0;}
+.view-toggle{display:flex;border:1.5px solid var(--light-gray);border-radius:16px;overflow:hidden;flex-shrink:0;}
+.view-btn{border:none;background:transparent;padding:5px 14px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--gray);transition:all 0.15s;white-space:nowrap;}
+.view-btn.active{background:var(--navy);color:var(--white);}
+.search-wrap{margin-left:auto;flex-shrink:0;}
+.search-input{border:1.5px solid var(--light-gray);border-radius:16px;padding:5px 14px 5px 32px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);background:var(--off-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;outline:none;width:200px;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--cherry);}
+
+/* MAIN */
+main{padding:28px 40px;}
+.section-wrap{margin-bottom:8px;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:32px;user-select:none;}
+.section-header:first-of-type{margin-top:0;}
+.section-title{font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:700;color:var(--navy);}
+.section-badge{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:3px 10px;border-radius:10px;}
+.badge-uk{background:var(--uk-band);color:#1e40af;}
+.badge-us{background:var(--us-band);color:#92400e;}
+.section-count{font-size:11px;color:var(--gray);}
+.section-rule{height:1.5px;background:var(--pink);flex:1;border-radius:2px;}
+.collapse-btn{background:none;border:1px solid var(--light-gray);color:var(--gray);cursor:pointer;font-size:11px;padding:3px 10px;border-radius:10px;font-family:'DM Sans',sans-serif;transition:all 0.15s;flex-shrink:0;}
+.collapse-btn:hover{background:var(--light-gray);}
+.section-body.collapsed{display:none;}
+
+/* CATEGORY TABS */
+.cat-tab-bar{background:var(--navy);padding:0 40px;display:flex;align-items:flex-end;gap:0;}
+.cat-tab{border:none;background:transparent;color:rgba(248,190,213,0.5);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;padding:12px 28px 10px;cursor:pointer;border-bottom:3px solid transparent;transition:color 0.15s,border-color 0.15s;display:flex;align-items:center;gap:8px;}
+.cat-tab:hover{color:rgba(248,190,213,0.85);}
+.cat-tab.active{color:var(--pink);border-bottom-color:var(--cherry);}
+.cat-tab-count{background:rgba(248,190,213,0.15);color:rgba(248,190,213,0.7);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;}
+.cat-tab.active .cat-tab-count{background:rgba(233,164,196,0.25);color:var(--pink);}
+
+/* CARDS */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(580px,1fr));gap:20px;}
+.project-card{background:var(--white);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden;transition:box-shadow 0.2s,transform 0.15s;border:1px solid rgba(28,28,76,0.06);position:relative;}
+.project-card:hover{box-shadow:0 6px 32px rgba(28,28,76,0.12);transform:translateY(-2px);}
+.project-card.flagged{border-left:4px solid var(--red);}
+.card-check{position:absolute;top:14px;left:14px;z-index:5;display:none;width:16px;height:16px;cursor:pointer;accent-color:var(--cherry);}
+.bulk-mode .card-check{display:block;}
+.card-header{padding:14px 18px 10px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.bulk-mode .card-header{padding-left:38px;}
+.card-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-title{font-family:'Playfair Display',Georgia,serif;font-size:15px;font-weight:700;color:var(--navy);cursor:pointer;}
+.card-title:hover{text-decoration:underline;}
+.tag{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;padding:2px 9px;border-radius:8px;}
+.tag-npd{background:#ede9fe;color:#5b21b6;}
+.tag-epd{background:#dcfce7;color:#166534;}
+.card-meta{font-size:11px;color:var(--gray);display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;align-items:center;}
+.card-actions{display:flex;gap:4px;flex-shrink:0;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--gray);padding:4px;border-radius:6px;transition:color 0.15s,background 0.15s;font-size:13px;line-height:1;}
+.icon-btn:hover{color:var(--navy);background:var(--light-gray);}
+.icon-btn.flagged-on{color:var(--red);}
+.countdown{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.cd-urgent{background:#fee2e2;color:var(--red);}
+.cd-soon{background:#fef3c7;color:#92400e;}
+.cd-ok{background:#dcfce7;color:#166534;}
+
+/* PROGRESS */
+.progress-row{padding:0 18px 8px;display:flex;align-items:center;gap:10px;}
+.progress-bar-track{flex:1;height:5px;background:var(--light-gray);border-radius:3px;overflow:hidden;}
+.progress-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cherry),var(--pink));transition:width 0.4s ease;}
+.progress-pct{font-size:11px;color:var(--gray);font-weight:600;min-width:30px;text-align:right;}
+
+/* MILESTONES */
+.milestones-wrap{padding:0 18px 12px;overflow-x:auto;}
+.milestones-scroll{display:flex;gap:4px;min-width:max-content;padding-bottom:4px;}
+.milestone{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px;position:relative;}
+.milestone:not(:last-child)::after{content:'';position:absolute;top:10px;left:calc(50% + 10px);width:calc(100% - 14px);height:1.5px;background:var(--light-gray);z-index:0;}
+.milestone.done:not(:last-child)::after{background:var(--cherry);}
+.milestone-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--light-gray);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:9px;position:relative;z-index:1;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.milestone.done .milestone-dot{background:var(--cherry);border-color:var(--cherry);color:var(--white);}
+.milestone.active .milestone-dot{border-color:var(--navy);box-shadow:0 0 0 3px rgba(233,164,196,0.4);}
+.milestone.overdue .milestone-dot{border-color:var(--red);background:#fff5f5;color:var(--red);}
+.milestone-dot:hover{transform:scale(1.18);}
+.milestone-label{font-size:8px;text-align:center;color:var(--gray);font-weight:500;line-height:1.2;max-width:64px;word-break:break-word;}
+.milestone.done .milestone-label{color:var(--navy);font-weight:600;}
+.milestone.active .milestone-label{color:var(--navy);font-weight:700;}
+.milestone.overdue .milestone-label{color:var(--red);font-weight:600;}
+.milestone-date{font-size:7.5px;color:var(--gray);text-align:center;}
+.milestone.overdue .milestone-date{color:var(--red);}
+
+/* LAUNCH DATES STRIP */
+.launch-strip{margin:0 18px 12px;background:var(--off-white);border:1.5px solid var(--light-gray);border-radius:8px;overflow:hidden;}
+.launch-strip-header{padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);background:var(--off-white);border-bottom:1px solid var(--light-gray);display:flex;align-items:center;gap:6px;}
+.launch-strip-header span{color:var(--cherry);}
+.launch-dates-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+.launch-date-cell{padding:9px 12px;border-right:1px solid var(--light-gray);}
+.launch-date-cell:last-child{border-right:none;}
+.ldc-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:3px;}
+.ldc-val{font-size:12px;font-weight:600;color:var(--navy);}
+.ldc-val.tbc{color:var(--gray);font-weight:400;font-style:italic;}
+.retailers-list{margin-top:4px;}
+.retailer-chip{display:inline-flex;align-items:center;gap:4px;background:var(--uk-band);color:#1e40af;border-radius:6px;padding:1px 7px;font-size:9px;font-weight:600;margin:1px 2px 1px 0;}
+.retailer-chip.us{background:var(--us-band);color:#92400e;}
+
+/* RANGE ARCHITECTURE */
+.range-section{margin:0 18px 12px;border:1.5px solid var(--light-gray);border-radius:8px;overflow:hidden;}
+.range-header{background:var(--off-white);border-bottom:1.5px solid var(--light-gray);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;}
+.range-header-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:6px;}
+.range-header-title span{color:var(--cherry);}
+.range-add-btn{background:var(--navy);color:var(--white);border:none;border-radius:12px;padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+.range-add-btn:hover{background:#2d2d6e;}
+.range-body{padding:10px 12px;}
+.sku-table{width:100%;border-collapse:collapse;font-size:11px;}
+.sku-table th{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);padding:4px 8px;border-bottom:1.5px solid var(--light-gray);text-align:left;}
+.sku-table td{padding:5px 8px;border-bottom:1px solid var(--light-gray);vertical-align:middle;}
+.sku-table tr:last-child td{border-bottom:none;}
+.sku-table tr:hover td{background:#fdf5f9;}
+.sku-name-cell{font-weight:600;color:var(--navy);}
+.sku-code-cell{font-family:monospace;font-size:10px;color:var(--gray);background:var(--off-white);border-radius:4px;padding:2px 6px;white-space:nowrap;}
+.sku-type-pill{font-size:9px;font-weight:600;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;}
+.sku-type-single{background:#ede9fe;color:#5b21b6;}
+.sku-type-mixed{background:#fef3c7;color:#92400e;}
+.sku-type-hero{background:#dcfce7;color:#166534;}
+.sku-delete-btn{background:none;border:none;color:var(--light-gray);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color 0.15s;}
+.sku-delete-btn:hover{color:var(--red);}
+.range-empty{font-size:11px;color:var(--gray);text-align:center;padding:14px 0;opacity:0.7;}
+.sku-count-badge{background:var(--cherry);color:var(--white);border-radius:8px;padding:1px 7px;font-size:9px;font-weight:700;}
+
+/* DOCUMENT LINKS */
+.docs-section{margin:0 18px 12px;border:1.5px solid var(--light-gray);border-radius:8px;overflow:hidden;}
+.docs-header{background:var(--off-white);border-bottom:1.5px solid var(--light-gray);padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:6px;}
+.docs-header span{color:var(--cherry);}
+.docs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+.doc-cell{padding:8px 12px;border-right:1px solid var(--light-gray);}
+.doc-cell:last-child{border-right:none;}
+.doc-cell-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:4px;}
+.doc-link{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#1e40af;text-decoration:none;background:var(--uk-band);border-radius:6px;padding:3px 9px;transition:background 0.15s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.doc-link:hover{background:#bfdbfe;}
+.doc-link.spec{background:#ede9fe;color:#5b21b6;}
+.doc-link.spec:hover{background:#ddd6fe;}
+.doc-link.pricing{background:#dcfce7;color:#166534;}
+.doc-link.pricing:hover{background:#bbf7d0;}
+.doc-missing{font-size:10px;color:var(--gray);opacity:.6;font-style:italic;}
+/* SKU artwork link */
+.sku-art-link{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;color:#5b21b6;background:#ede9fe;border-radius:5px;padding:2px 7px;text-decoration:none;white-space:nowrap;transition:background 0.15s;}
+.sku-art-link:hover{background:#ddd6fe;}
+.sku-art-missing{font-size:9px;color:var(--gray);opacity:.5;font-style:italic;}
+
+/* NOTES */
+.notes-section{margin:0 18px 10px;border-radius:8px;overflow:hidden;border:1.5px solid var(--light-gray);}
+.notes-tabs{display:flex;background:var(--off-white);border-bottom:1.5px solid var(--light-gray);}
+.notes-tab{flex:1;border:none;background:transparent;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gray);cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:space-between;gap:6px;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;}
+.notes-tab:first-child{border-right:1px solid var(--light-gray);}
+.notes-tab.active{color:var(--navy);background:var(--white);border-bottom-color:var(--cherry);}
+.notes-tab:hover:not(.active){background:var(--pink);color:var(--navy);}
+.tab-dot{width:6px;height:6px;border-radius:50%;background:var(--cherry);flex-shrink:0;display:none;}
+.tab-dot.on{display:inline-block;}
+.notes-panels{background:var(--white);}
+.notes-panel{display:none;padding:8px 12px;}
+.notes-panel.active{display:block;}
+.notes-textarea{width:100%;min-height:58px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);resize:vertical;outline:none;line-height:1.6;}
+.notes-textarea::placeholder{color:var(--gray);opacity:0.6;}
+
+/* ACTIVITY LOG */
+.activity-section{margin:0 18px 10px;}
+.activity-toggle{background:none;border:none;font-size:10px;color:var(--gray);cursor:pointer;letter-spacing:1px;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:600;padding:0;display:flex;align-items:center;gap:4px;}
+.activity-toggle:hover{color:var(--navy);}
+.activity-list{margin-top:6px;display:none;max-height:90px;overflow-y:auto;border:1px solid var(--light-gray);border-radius:6px;}
+.activity-list.open{display:block;}
+.activity-item{font-size:10px;padding:5px 10px;border-bottom:1px solid var(--light-gray);display:flex;gap:10px;}
+.activity-item:last-child{border-bottom:none;}
+.a-time{color:var(--gray);flex-shrink:0;opacity:.75;}
+.a-text{color:var(--navy);}
+
+/* CARD FOOTER */
+.card-footer{padding:6px 18px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.footer-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.updated-lbl{font-size:10px;color:var(--gray);opacity:.65;}
+.status-pill{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;padding:3px 10px;border-radius:10px;cursor:default;}
+.status-on-track{background:#dcfce7;color:#166534;}
+.status-at-risk{background:#fef3c7;color:#92400e;}
+.status-delayed{background:#fee2e2;color:#991b1b;}
+.status-complete{background:#ede9fe;color:#5b21b6;}
+
+/* GANTT */
+#ganttView{display:none;}
+.gantt-outer{overflow-x:auto;border-radius:12px;box-shadow:var(--card-shadow);background:var(--white);}
+.gantt-table{width:100%;border-collapse:collapse;font-size:12px;min-width:860px;}
+.gantt-table th{background:var(--navy);color:var(--white);padding:9px 12px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;text-align:left;white-space:nowrap;}
+.gantt-table td{padding:9px 12px;border-bottom:1px solid var(--light-gray);vertical-align:middle;}
+.gantt-table tr:last-child td{border-bottom:none;}
+.gantt-table tr:hover td{background:#fdf5f9;}
+.gantt-name-col{font-weight:600;color:var(--navy);max-width:180px;}
+.gantt-bar-cell{min-width:460px;}
+.gantt-bar-bg{background:#f1e8f0;border-radius:5px;height:18px;position:relative;overflow:visible;}
+.gantt-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--cherry),var(--pink));position:absolute;top:0;left:0;}
+.gantt-ms{position:absolute;top:-3px;width:2px;height:24px;border-radius:1px;background:rgba(28,28,76,0.35);}
+.gantt-ms.done{background:var(--green);opacity:.9;}
+.gantt-ms.overdue{background:var(--red);opacity:.8;}
+.gantt-launch{position:absolute;top:-5px;transform:translateX(-50%);font-size:11px;line-height:1;z-index:2;}
+.gantt-today-line{position:absolute;top:-8px;width:2px;height:34px;background:var(--red);border-radius:1px;z-index:3;}
+.gantt-today-line::before{content:'Today';position:absolute;top:-13px;left:4px;font-size:8px;color:var(--red);font-weight:700;white-space:nowrap;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,76,0.45);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:18px;padding:32px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(28,28,76,0.2);animation:slideUp 0.25s ease;max-height:92vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal h2{font-family:'Playfair Display',Georgia,serif;font-size:20px;color:var(--navy);margin-bottom:20px;}
+.modal-section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin:20px 0 10px;padding-top:16px;border-top:1.5px solid var(--light-gray);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);}
+input[type="text"],input[type="date"],select,textarea{border:1.5px solid var(--light-gray);border-radius:8px;padding:7px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--navy);outline:none;transition:border-color 0.15s;background:var(--white);}
+input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn-cancel{background:none;border:1.5px solid var(--light-gray);color:var(--gray);border-radius:20px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.15s;}
+.btn-cancel:hover{border-color:var(--navy);color:var(--navy);}
+.btn-save{background:var(--navy);color:var(--white);border:none;border-radius:20px;padding:8px 24px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
+.btn-save:hover{background:#2d2d6e;}
+.ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.ms-row{display:flex;flex-direction:column;gap:3px;}
+.ms-row label{font-size:10px;}
+.ms-row input{font-size:12px;padding:5px 9px;}
+
+/* RETAILER MODAL INPUTS */
+.retailer-input-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.retailer-input-row input{flex:1;}
+.retailer-input-row select{width:110px;flex-shrink:0;}
+.retailer-remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;padding:4px;}
+.add-retailer-btn{background:none;border:1.5px dashed var(--light-gray);color:var(--gray);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;transition:all 0.15s;margin-top:4px;}
+.add-retailer-btn:hover{border-color:var(--cherry);color:var(--navy);}
+
+/* SKU MODAL TABLE */
+.sku-modal-row{display:grid;grid-template-columns:1fr 100px 90px 1fr 32px;gap:8px;align-items:center;margin-bottom:8px;}
+.sku-modal-row input,.sku-modal-row select{font-size:12px;padding:5px 9px;}
+.add-sku-btn{background:none;border:1.5px dashed var(--light-gray);color:var(--gray);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;transition:all 0.15s;margin-top:4px;}
+.add-sku-btn:hover{border-color:var(--cherry);color:var(--navy);}
+
+/* CONFIRM */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(28,28,76,0.45);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:var(--white);border-radius:14px;padding:26px 30px;max-width:340px;text-align:center;box-shadow:0 10px 40px rgba(28,28,76,0.15);}
+.confirm-box p{font-size:14px;color:var(--navy);margin-bottom:18px;line-height:1.5;}
+.btn-delete{background:var(--red);color:#fff;border:none;border-radius:20px;padding:8px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.empty-section{background:var(--white);border:2px dashed var(--light-gray);border-radius:14px;padding:32px;text-align:center;color:var(--gray);font-size:13px;}
+
+/* TOOLTIP */
+.tt{position:relative;display:inline-block;}
+.tt-tip{display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--navy);color:var(--white);font-size:10px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:50;}
+.tt:hover .tt-tip{display:block;}
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--light-gray);border-radius:3px;}
+
+@media(max-width:700px){
+  header,.filter-bar,main,.dashboard,.bulk-bar{padding-left:16px;padding-right:16px;}
+  .projects-grid{grid-template-columns:1fr;}
+  .form-grid,.ms-grid{grid-template-columns:1fr;}
+  .launch-dates-grid{grid-template-columns:1fr;}
+  .sku-modal-row{grid-template-columns:1fr 1fr 32px;}
+}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay" style="display:flex;position:fixed;inset:0;background:var(--navy);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:700;color:var(--pink);letter-spacing:6px;">TRIP</div>
+  <div style="font-size:12px;color:rgba(248,190,213,0.6);letter-spacing:2px;text-transform:uppercase;">Loading projects…</div>
+  <div style="width:160px;height:3px;background:rgba(248,190,213,0.15);border-radius:2px;overflow:hidden;margin-top:8px;">
+    <div id="loadingBar" style="height:100%;width:0%;background:var(--cherry);border-radius:2px;transition:width 0.4s ease;"></div>
+  </div>
+</div>
+
+<header>
+  <div>
+    <div class="logo">TRIP</div>
+    <div class="header-sub">Project Manager</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-hdr" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn-hdr" id="bulkBtn" onclick="toggleBulkMode()">☑ Bulk Edit</button>
+    <button class="btn-hdr" onclick="resetData()" style="color:rgba(248,190,213,0.5);border-color:rgba(248,190,213,0.12);" title="Clear saved data and reload default projects">↺ Reset</button>
+    <button class="btn-add" onclick="openAddModal()">+ New Project <span class="kbd-hint">N</span></button>
+  </div>
+</header>
+
+<div class="dashboard" id="dashboard"></div>
+<div class="cat-tab-bar">
+  <button class="cat-tab active" id="ctab-drinks" onclick="setCategory('drinks',this)">🥤 Drinks <span class="cat-tab-count" id="ctab-count-drinks">0</span></button>
+  <button class="cat-tab" id="ctab-supps" onclick="setCategory('supps',this)">💊 Supps <span class="cat-tab-count" id="ctab-count-supps">0</span></button>
+</div>
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count" id="bulkCount">0 selected</span>
+  <select class="bulk-status-select" id="bulkSel">
+    <option value="">Set status…</option>
+    <option value="on-track">On Track</option>
+    <option value="at-risk">At Risk</option>
+    <option value="delayed">Delayed</option>
+    <option value="complete">Complete</option>
+  </select>
+  <button class="btn-bulk-apply" onclick="applyBulk()">Apply</button>
+  <button class="btn-bulk-cancel" onclick="toggleBulkMode()">Cancel</button>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Filter</span>
+  <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+  <div class="filter-divider"></div>
+  <button class="filter-btn" onclick="setFilter('UK',this)">🇬🇧 UK</button>
+  <button class="filter-btn" onclick="setFilter('US',this)">🇺🇸 US</button>
+  <div class="filter-divider"></div>
+  <button class="filter-btn" onclick="setFilter('NPD',this)">NPD</button>
+  <button class="filter-btn" onclick="setFilter('EPD',this)">EPD</button>
+  <div class="filter-divider"></div>
+  <button class="filter-btn" onclick="setFilter('on-track',this)">On Track</button>
+  <button class="filter-btn" onclick="setFilter('at-risk',this)">At Risk</button>
+  <button class="filter-btn" onclick="setFilter('delayed',this)">Delayed</button>
+  <button class="filter-btn" onclick="setFilter('flagged',this)">🚨 Flagged</button>
+  <div class="filter-divider"></div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="vCards" onclick="setView('cards')">⊞ Cards</button>
+    <button class="view-btn" id="vGantt" onclick="setView('gantt')">▤ Gantt</button>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="Search projects or owner…" oninput="doSearch(this.value)">
+  </div>
+</div>
+
+<main>
+  <div id="cardsView"></div>
+  <div id="ganttView">
+    <div class="gantt-outer"><table class="gantt-table" id="ganttTable"></table></div>
+  </div>
+</main>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <h2 id="modalTitle">New Project</h2>
+
+    <!-- CORE FIELDS -->
+    <div class="form-grid">
+      <div class="form-group full"><label>Project Name</label><input type="text" id="f_name" placeholder="e.g. Lemon Ginger CBD Can"></div>
+      <div class="form-group"><label>Category</label><select id="f_category"><option value="drinks">🥤 Drinks</option><option value="supps">💊 Supps</option></select></div>
+      <div class="form-group"><label>Region</label><select id="f_region"><option value="UK">🇬🇧 UK</option><option value="US">🇺🇸 US</option></select></div>
+      <div class="form-group"><label>Type</label><select id="f_type"><option value="NPD">NPD</option><option value="EPD">EPD</option></select></div>
+      <div class="form-group"><label>Status</label><select id="f_status"><option value="on-track">On Track</option><option value="at-risk">At Risk</option><option value="delayed">Delayed</option><option value="complete">Complete</option></select></div>
+      <div class="form-group"><label>Owner</label><input type="text" id="f_owner" placeholder="e.g. Liv M."></div>
+      <div class="form-group full"><label>Development Notes</label><textarea id="f_devNotes" rows="2" placeholder="Recipe decisions, supplier context, blockers…"></textarea></div>
+      <div class="form-group full"><label>A-Team Notes</label><textarea id="f_ateamNotes" rows="2" placeholder="A-team actions, feedback, sign-off comments…"></textarea></div>
+    </div>
+
+    <!-- DOCUMENT LINKS -->
+    <div class="modal-section-title">📄 Signed Off Documents</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Signed Off Recipe (URL)</label><input type="text" id="f_recipeUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
+      <div class="form-group full"><label>Signed Off Specification (URL)</label><input type="text" id="f_specUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
+      <div class="form-group full"><label>Agreed Pricing (URL)</label><input type="text" id="f_pricingUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
+    </div>
+
+    <!-- LAUNCH DATES -->
+    <div class="modal-section-title">🚀 Launch Dates</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Digital Launch Date</label><input type="date" id="f_digitalLaunch"></div>
+      <div class="form-group"><label>Marketing Launch Date</label><input type="date" id="f_marketingLaunch"></div>
+    </div>
+    <div class="modal-section-title" style="margin-top:14px;border-top:none;padding-top:0;">🛒 Retail Launch Dates</div>
+    <div id="retailerInputs"></div>
+    <button class="add-retailer-btn" onclick="addRetailerInput()">+ Add Retailer</button>
+
+    <!-- RANGE ARCHITECTURE -->
+    <div class="modal-section-title">📦 Range Architecture & SKUs</div>
+    <div style="display:grid;grid-template-columns:1fr 100px 90px 1fr 32px;gap:8px;margin-bottom:6px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);">SKU Name</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);">SKU Code</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);">Type</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);">Artwork Link (URL)</div>
+      <div></div>
+    </div>
+    <div id="skuInputs"></div>
+    <button class="add-sku-btn" onclick="addSkuInput()">+ Add SKU</button>
+
+    <!-- MILESTONES -->
+    <div class="modal-section-title">📅 Milestone Target Dates</div>
+    <div class="ms-grid" id="msDatesGrid"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>Delete <strong id="confirmName"></strong>?<br>This cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──
+const MS = ['Gate 1','Gate 2','Recipe Sign Off','MPC Creation','Artwork FTP','Ingredient PO','First Production','RTO','Digital Launch Date','Retail Launch Date','Marketing Launch Date'];
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const STORE_KEY = 'trip_pm_v6';
+
+const UK_RETAILERS = ['Waitrose','Sainsbury\'s','Tesco','Boots','Holland & Barrett','Whole Foods','Selfridges','ASOS','Amazon UK','Ocado','Other'];
+const US_RETAILERS = ['Whole Foods','Target','Walmart','Sprouts','Amazon US','Erewhon','Thrive Market','Trader Joe\'s','Kroger','Other'];
+const SKU_TYPES = ['Single','Mixed Pack','Hero SKU','Multipack','Gift Set','Starter Pack'];
+
+// ── SEED DATA ──
+let projects = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+if (!projects) {
+  const now = new Date().toISOString();
+  const mkLog = () => [{t:now,msg:'Project created'}];
+  projects = [
+
+    // ── UK NPD ──
+    { id:1, name:'Frosted Blackberry', region:'UK', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'2026-09-14', marketingLaunch:'2026-11-02',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 250ml MB',code:'MB.BB.12.UKEU',type:'Single',artworkUrl:''},
+        {name:'6 x 4 250ml MB',code:'MB.BB.6.4.UKEU',type:'Multipack',artworkUrl:''},
+        {name:'MB.MIX.12.V8 MB: SL, BR, AB, CL, WS,BB, TM ,EM',code:'MB.MIX.12.V8',type:'Mixed Pack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'Quote attached for 2MT and 10MT.\n\nTRIP CIU Target: £28p/L',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-14'},'Digital Launch Date':{done:false,date:'2026-09-14'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+
+    { id:2, name:'Peach Revamp', region:'UK', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 250ml',code:'',type:'Single',artworkUrl:''},
+        {name:'12 x 330ml',code:'',type:'Single',artworkUrl:''},
+        {name:'6 x 4 250ml',code:'',type:'Multipack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'Brief shared with Doehler',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+
+    { id:3, name:'Watermelon', region:'UK', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'', marketingLaunch:'2027-05-28',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 250ml',code:'',type:'Single',artworkUrl:''},
+        {name:'12 x 330ml',code:'',type:'Single',artworkUrl:''},
+        {name:'6 x 4 250ml',code:'',type:'Multipack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'Brief shared with Doehler',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-09-04'},'Ingredient PO':{done:false,date:'2026-09-04'},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}},
+
+    // ── UK EPD ──
+    { id:4, name:'Elderflower Mint MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'', marketingLaunch:'',
+      retailLaunches:[],
+      skus:[],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+
+    { id:5, name:'Raspberry Orange Blossom MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'', marketingLaunch:'',
+      retailLaunches:[],
+      skus:[],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+
+    // ── US NPD ──
+    { id:6, name:'Frosted Blackberry', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'2026-09-21', marketingLaunch:'2026-11-02',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 355ml MB',code:'MB.BB.12.USA',type:'Single',artworkUrl:''},
+        {name:'6 x 4 355ml MB',code:'MB.BB.6.4.USA',type:'Multipack',artworkUrl:''},
+        {name:'Winter Mix [V5] MB: BB, CL, RO, EM',code:'MB.MIX.12.V5.USA',type:'Mixed Pack',artworkUrl:''},
+        {name:'Variety Pack [V7] MB: WS, CL, TM, EM, PG, BR, MC, RO, BB',code:'MB.MIX.12.V7.USA',type:'Mixed Pack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'https://drive.google.com/file/d/13SvOiiG84thsBj4d_Z2RuapikzgneRWa/view?usp=sharing', pricingUrl:'',
+      devNotes:'US Pricing - https://drive.google.com/file/d/13SvOiiG84thsBj4d_Z2RuapikzgneRWa/view?usp=sharing',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-21'},'Digital Launch Date':{done:false,date:'2026-09-21'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+
+    { id:7, name:'Peach Revamp', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 255ml',code:'',type:'Single',artworkUrl:''},
+        {name:'6 x 4 355ml',code:'',type:'Multipack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'Liv to taste samples w/c 15/05',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+
+    { id:8, name:'Watermelon', region:'US', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
+      digitalLaunch:'', marketingLaunch:'2027-05-28',
+      retailLaunches:[],
+      skus:[
+        {name:'12 x 355ml',code:'',type:'Single',artworkUrl:''},
+        {name:'6 x 4 355ml',code:'',type:'Multipack',artworkUrl:''}
+      ],
+      recipeUrl:'', specUrl:'', pricingUrl:'',
+      devNotes:'Brief shared with Doehler',
+      ateamNotes:'',
+      updatedAt:now, activityLog:mkLog(),
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-08-21'},'Ingredient PO':{done:false,date:'2026-09-04'},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}}
+
+  ];
+  save();
+}
+
+let activeFilter='all', searchQ='', currentView='cards', activeCategory='drinks';
+let editingId=null, deletingId=null, bulkMode=false;
+let collapsed={};
+const selected=new Set();
+
+// ── GOOGLE SHEETS SYNC ──
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcdnHCSP_dxSF2PCO3OsrWBLnQ3s6hri7zouqGZiCTvhMOYV3CavQ-s97cH-8eZsOLmg/exec';
+
+let saveTimer = null;
+function save(){
+  const json = JSON.stringify(projects);
+  // always write to localStorage as offline fallback
+  localStorage.setItem(STORE_KEY, json);
+  // debounce the sheet write — wait 1.5s after last change before saving
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=> saveToSheets(json), 1500);
+}
+
+function saveToSheets(json){
+  const encoded = encodeURIComponent(json);
+  const url = SCRIPT_URL + '?action=save&data=' + encoded;
+  fetch(url, {mode:'no-cors'})
+    .catch(()=>{});
+}
+
+async function loadFromSheets(){
+  try {
+    const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
+    const json = await res.json();
+    if(json.status === 'ok' && json.data && json.data !== '[]' && json.data !== ''){
+      const parsed = JSON.parse(json.data);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        projects = parsed;
+        localStorage.setItem(STORE_KEY, json.data);
+        return true;
+      }
+    }
+  } catch(e){}
+  return false;
+}
+
+function touch(p,msg){
+  p.updatedAt=new Date().toISOString();
+  if(!p.activityLog)p.activityLog=[];
+  p.activityLog.unshift({t:p.updatedAt,msg});
+  if(p.activityLog.length>40)p.activityLog.length=40;
+}
+
+// ── AUTO-STATUS ──
+function autoStatus(p){
+  if(p.status==='complete')return;
+  const allDone=MS.every(m=>p.milestones[m]?.done);
+  if(allDone){p.status='complete';return;}
+  let hasOD=false,hasSoon=false;
+  MS.forEach(ms=>{
+    const m=p.milestones[ms];
+    if(!m||m.done||!m.date)return;
+    const d=dayDiff(m.date);
+    if(d<0)hasOD=true; else if(d<=14)hasSoon=true;
+  });
+  if(hasOD&&p.status==='on-track')p.status='delayed';
+  else if(hasSoon&&p.status==='on-track')p.status='at-risk';
+}
+
+// ── HELPERS ──
+function dayDiff(ds){const d=new Date(ds);d.setHours(0,0,0,0);return Math.ceil((d-TODAY)/86400000);}
+function fmtDate(d){if(!d)return'';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});}
+function fmtTs(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
+function getPct(p){const v=Object.values(p.milestones);return Math.round(v.filter(m=>m.done).length/v.length*100);}
+function statusLabel(s){return{'on-track':'On Track','at-risk':'At Risk','delayed':'Delayed','complete':'Complete'}[s]||s;}
+function statusCls(s){return{'on-track':'status-on-track','at-risk':'status-at-risk','delayed':'status-delayed','complete':'status-complete'}[s]||'';}
+
+function earliestLaunch(p){
+  const dates=[p.digitalLaunch,p.marketingLaunch,...(p.retailLaunches||[]).map(r=>r.date)].filter(Boolean);
+  if(!dates.length)return null;
+  return dates.reduce((a,b)=>a<b?a:b);
+}
+function countdownPill(p){
+  const d=earliestLaunch(p); if(!d)return'';
+  const diff=dayDiff(d);
+  if(diff<0)return`<span class="countdown cd-urgent">${Math.abs(diff)}d overdue</span>`;
+  if(diff===0)return`<span class="countdown cd-urgent">Launches today!</span>`;
+  if(diff<=14)return`<span class="countdown cd-urgent">${diff}d to launch</span>`;
+  if(diff<=35)return`<span class="countdown cd-soon">${diff}d to launch</span>`;
+  return`<span class="countdown cd-ok">${diff}d to launch</span>`;
+}
+
+function activeMilestone(p){const i=MS.findIndex(k=>!p.milestones[k]?.done);return i===-1?null:MS[i];}
+
+// ── LAUNCH STRIP RENDER ──
+function renderLaunchStrip(p){
+  const digital=p.digitalLaunch?fmtDate(p.digitalLaunch):'TBC';
+  const mkt=p.marketingLaunch?fmtDate(p.marketingLaunch):'TBC';
+  const retailers=p.retailLaunches||[];
+  const retailHtml=retailers.length?retailers.map(r=>
+    `<div class="retailer-chip ${p.region==='US'?'us':''}">${r.retailer}${r.date?': '+fmtDate(r.date):''}</div>`
+  ).join(''):'<span style="font-size:10px;color:var(--gray);opacity:.7">No retailers added yet</span>';
+
+  return`<div class="launch-strip">
+    <div class="launch-strip-header">🚀 <span>Launch Dates</span></div>
+    <div class="launch-dates-grid">
+      <div class="launch-date-cell">
+        <div class="ldc-label">💻 Digital</div>
+        <div class="ldc-val ${p.digitalLaunch?'':'tbc'}">${digital}</div>
+      </div>
+      <div class="launch-date-cell">
+        <div class="ldc-label">📣 Marketing</div>
+        <div class="ldc-val ${p.marketingLaunch?'':'tbc'}">${mkt}</div>
+      </div>
+      <div class="launch-date-cell">
+        <div class="ldc-label">🛒 Retail</div>
+        <div class="retailers-list">${retailHtml}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── DOCUMENT LINKS RENDER ──
+function renderDocsSection(p){
+  const recipe = p.recipeUrl;
+  const spec = p.specUrl;
+  const pricing = p.pricingUrl;
+  const recipeHtml = recipe
+    ? `<a class="doc-link" href="${recipe}" target="_blank" rel="noopener">📄 View Recipe</a>`
+    : `<span class="doc-missing">No link added yet</span>`;
+  const specHtml = spec
+    ? `<a class="doc-link spec" href="${spec}" target="_blank" rel="noopener">📋 View Spec</a>`
+    : `<span class="doc-missing">No link added yet</span>`;
+  const pricingHtml = pricing
+    ? `<a class="doc-link pricing" href="${pricing}" target="_blank" rel="noopener">💰 View Pricing</a>`
+    : `<span class="doc-missing">No link added yet</span>`;
+  return`<div class="docs-section">
+    <div class="docs-header">📄 <span>Signed Off Documents</span></div>
+    <div class="docs-grid">
+      <div class="doc-cell">
+        <div class="doc-cell-label">Signed Off Recipe</div>
+        ${recipeHtml}
+      </div>
+      <div class="doc-cell">
+        <div class="doc-cell-label">Signed Off Specification</div>
+        ${specHtml}
+      </div>
+      <div class="doc-cell">
+        <div class="doc-cell-label">Agreed Pricing</div>
+        ${pricingHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RANGE ARCHITECTURE RENDER ──
+function renderRangeSection(p){
+  const skus=p.skus||[];
+  const skuRows=skus.length?skus.map((s,i)=>{
+    const artHtml = s.artworkUrl
+      ? `<a class="sku-art-link" href="${s.artworkUrl}" target="_blank" rel="noopener">🎨 Artwork</a>`
+      : `<span class="sku-art-missing">No artwork</span>`;
+    return`<tr>
+      <td class="sku-name-cell">${s.name||'—'}</td>
+      <td><span class="sku-code-cell">${s.code||'—'}</span></td>
+      <td><span class="sku-type-pill sku-type-${(s.type||'single').toLowerCase().replace(/\s+/g,'-')}">${s.type||'Single'}</span></td>
+      <td>${artHtml}</td>
+    </tr>`;
+  }).join('')
+    :`<tr><td colspan="4"><div class="range-empty">No SKUs added yet — click Edit to add range architecture</div></td></tr>`;
+  const badge=skus.length?`<span class="sku-count-badge">${skus.length} SKU${skus.length!==1?'s':''}</span>`:'';
+  return`<div class="range-section">
+    <div class="range-header">
+      <div class="range-header-title">📦 <span>Range Architecture</span> ${badge}</div>
+      <button class="range-add-btn" onclick="openEditModal(${p.id})">Edit SKUs</button>
+    </div>
+    <div class="range-body">
+      <table class="sku-table">
+        <thead><tr><th>SKU Name</th><th>SKU Code</th><th>Type</th><th>Artwork</th></tr></thead>
+        <tbody>${skuRows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── CARD RENDER ──
+function renderCard(p){
+  autoStatus(p);
+  const pct=getPct(p);
+  const activeMs=activeMilestone(p);
+  const msDots=MS.map(ms=>{
+    const m=p.milestones[ms]||{};
+    const done=m.done, od=!done&&m.date&&dayDiff(m.date)<0;
+    const isActive=ms===activeMs&&!done;
+    const cls=done?'done':od?'overdue':isActive?'active':'';
+    const icon=done?'✓':od?'!':'';
+    return`<div class="milestone ${cls}">
+      <div class="tt"><div class="milestone-dot" onclick="toggleMs(${p.id},'${ms}')">${icon}</div>
+      <div class="tt-tip">${ms}${m.date?'<br>'+fmtDate(m.date):''}</div></div>
+      <div class="milestone-label">${ms}</div>
+      <div class="milestone-date">${m.date?fmtDate(m.date):''}</div>
+    </div>`;
+  }).join('');
+
+  const devDot=(p.devNotes||'').trim()?'on':'';
+  const aDot=(p.ateamNotes||'').trim()?'on':'';
+  const logHtml=(p.activityLog||[]).slice(0,10).map(a=>
+    `<div class="activity-item"><span class="a-time">${fmtTs(a.t)}</span><span class="a-text">${a.msg}</span></div>`
+  ).join('')||'<div class="activity-item"><span class="a-text" style="opacity:.6">No activity yet.</span></div>';
+
+  return`<div class="project-card ${p.flagged?'flagged':''}" id="card-${p.id}">
+    <input type="checkbox" class="card-check" onchange="toggleSel(${p.id},this.checked)" ${selected.has(p.id)?'checked':''}>
+    <div class="card-header">
+      <div>
+        <div class="card-title-row">
+          <span class="card-title" onclick="openEditModal(${p.id})">${p.name}</span>
+          <span class="tag tag-${p.type.toLowerCase()}">${p.type}</span>
+          ${p.flagged?'<span style="font-size:12px">🚨</span>':''}
+        </div>
+        <div class="card-meta">
+          ${p.owner?`<span>👤 ${p.owner}</span>`:''}
+          <span>${p.region==='UK'?'🇬🇧':'🇺🇸'} ${p.region}</span>
+          ${countdownPill(p)}
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn ${p.flagged?'flagged-on':''}" title="${p.flagged?'Remove flag':'Flag as blocker'}" onclick="toggleFlag(${p.id})">🚨</button>
+        <button class="icon-btn" title="Duplicate project" onclick="duplicateProject(${p.id})">⧉</button>
+        <button class="icon-btn" title="Edit" onclick="openEditModal(${p.id})">✏️</button>
+        <button class="icon-btn" title="Delete" onclick="askDelete(${p.id})">🗑️</button>
+      </div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="progress-pct">${pct}%</div>
+    </div>
+    <div class="milestones-wrap"><div class="milestones-scroll">${msDots}</div></div>
+    ${renderLaunchStrip(p)}
+    ${renderDocsSection(p)}
+    ${renderRangeSection(p)}
+    <div class="notes-section">
+      <div class="notes-tabs">
+        <button class="notes-tab active" id="ntab-dev-${p.id}" onclick="switchTab(${p.id},'dev')">
+          <span>Development Notes</span><span class="tab-dot ${devDot}"></span>
+        </button>
+        <button class="notes-tab" id="ntab-at-${p.id}" onclick="switchTab(${p.id},'at')">
+          <span>A-Team Notes</span><span class="tab-dot ${aDot}"></span>
+        </button>
+      </div>
+      <div class="notes-panels">
+        <div class="notes-panel active" id="np-dev-${p.id}">
+          <textarea class="notes-textarea" placeholder="Development context, recipe decisions, supplier notes…" onblur="saveDevNote(${p.id},this.value)">${p.devNotes||''}</textarea>
+        </div>
+        <div class="notes-panel" id="np-at-${p.id}">
+          <textarea class="notes-textarea" placeholder="A-team actions, feedback, sign-off comments…" onblur="saveAteamNote(${p.id},this.value)">${p.ateamNotes||''}</textarea>
+        </div>
+      </div>
+    </div>
+    <div class="activity-section">
+      <button class="activity-toggle" id="atog-${p.id}" onclick="toggleActivityLog(${p.id})">▸ Activity log</button>
+      <div class="activity-list" id="alog-${p.id}">${logHtml}</div>
+    </div>
+    <div class="card-footer">
+      <div class="footer-left">
+        ${p.updatedAt?`<div class="updated-lbl">Updated ${fmtTs(p.updatedAt)}</div>`:''}
+      </div>
+      <span class="status-pill ${statusCls(p.status)}">${statusLabel(p.status)}</span>
+    </div>
+  </div>`;
+}
+
+// ── GANTT RENDER ──
+function renderGantt(list){
+  if(!list.length){document.getElementById('ganttTable').innerHTML='<tr><td style="padding:24px;color:var(--gray)">No projects match.</td></tr>';return;}
+  const allDates=[];
+  list.forEach(p=>{
+    MS.forEach(ms=>{if(p.milestones[ms]?.date)allDates.push(new Date(p.milestones[ms].date));});
+    [p.digitalLaunch,p.marketingLaunch,...(p.retailLaunches||[]).map(r=>r.date)].filter(Boolean).forEach(d=>allDates.push(new Date(d)));
+  });
+  allDates.push(TODAY);
+  const minD=new Date(Math.min(...allDates));minD.setDate(minD.getDate()-10);
+  const maxD=new Date(Math.max(...allDates));maxD.setDate(maxD.getDate()+14);
+  const span=maxD-minD;
+  const toX=d=>Math.max(0,Math.min(100,(new Date(d)-minD)/span*100));
+  const todayX=toX(TODAY);
+  let h=`<thead><tr>
+    <th style="width:175px">Project</th><th style="width:72px">Status</th><th style="width:52px">%</th>
+    <th class="gantt-bar-cell">Timeline &nbsp;<span style="font-size:9px;opacity:.55">${fmtDate(minD)} → ${fmtDate(maxD)}</span></th>
+  </tr></thead><tbody>`;
+  list.forEach(p=>{
+    autoStatus(p);
+    const pct=getPct(p);
+    const markers=MS.map(ms=>{
+      const m=p.milestones[ms];if(!m?.date)return'';
+      const x=toX(m.date);
+      const od=!m.done&&dayDiff(m.date)<0;
+      const cls=m.done?'done':od?'overdue':'';
+      return`<div class="gantt-ms ${cls}" style="left:${x}%" title="${ms}: ${fmtDate(m.date)}"></div>`;
+    }).join('');
+    // show all 3 launch markers
+    const dLaunch=p.digitalLaunch?`<div class="gantt-launch" style="left:${toX(p.digitalLaunch)}%" title="Digital Launch: ${fmtDate(p.digitalLaunch)}">💻</div>`:'';
+    const mLaunch=p.marketingLaunch?`<div class="gantt-launch" style="left:${toX(p.marketingLaunch)}%" title="Marketing Launch: ${fmtDate(p.marketingLaunch)}">📣</div>`:'';
+    const rLaunches=(p.retailLaunches||[]).map(r=>r.date?`<div class="gantt-launch" style="left:${toX(r.date)}%" title="${r.retailer}: ${fmtDate(r.date)}">🛒</div>`:'').join('');
+    h+=`<tr>
+      <td class="gantt-name-col">${p.name}<br><span style="font-size:10px;color:var(--gray)">${p.region} · ${p.type}${p.owner?' · '+p.owner:''}</span></td>
+      <td><span class="status-pill ${statusCls(p.status)}" style="font-size:9px">${statusLabel(p.status)}</span></td>
+      <td style="font-size:11px;font-weight:600">${pct}%</td>
+      <td class="gantt-bar-cell"><div class="gantt-bar-bg">
+        <div class="gantt-bar-fill" style="width:${pct}%"></div>
+        ${markers}${dLaunch}${mLaunch}${rLaunches}
+        <div class="gantt-today-line" style="left:${todayX}%"></div>
+      </div></td>
+    </tr>`;
+  });
+  document.getElementById('ganttTable').innerHTML=h+'</tbody>';
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const all=projects;all.forEach(autoStatus);
+  document.getElementById('ctab-count-drinks').textContent=all.filter(p=>(p.category||'drinks')==='drinks').length;
+  document.getElementById('ctab-count-supps').textContent=all.filter(p=>p.category==='supps').length;
+  const cat=all.filter(p=>(p.category||'drinks')===activeCategory);
+  const t=cat.length,on=cat.filter(p=>p.status==='on-track').length,ar=cat.filter(p=>p.status==='at-risk').length,dl=cat.filter(p=>p.status==='delayed').length,co=cat.filter(p=>p.status==='complete').length,fl=cat.filter(p=>p.flagged).length;
+  const totalSkus=cat.reduce((s,p)=>s+(p.skus||[]).length,0);
+  const avg=t?Math.round(cat.reduce((s,p)=>s+getPct(p),0)/t):0;
+  document.getElementById('dashboard').innerHTML=`
+    <div class="dash-card"><div class="d-val">${t}</div><div class="d-lbl">Projects</div></div>
+    <div class="dash-card d-green"><div class="d-val">${on}</div><div class="d-lbl">On Track</div></div>
+    <div class="dash-card d-amber"><div class="d-val">${ar}</div><div class="d-lbl">At Risk</div></div>
+    <div class="dash-card d-red"><div class="d-val">${dl}</div><div class="d-lbl">Delayed</div></div>
+    <div class="dash-card d-purple"><div class="d-val">${co}</div><div class="d-lbl">Complete</div></div>
+    <div class="dash-card"><div class="d-val">${avg}%</div><div class="d-lbl">Avg Progress</div></div>
+    <div class="dash-card"><div class="d-val">${totalSkus}</div><div class="d-lbl">Total SKUs</div></div>
+    ${fl?`<div class="dash-card d-red"><div class="d-val">${fl}</div><div class="d-lbl">🚨 Flagged</div></div>`:''}`;
+}
+
+// ── MAIN RENDER ──
+function render(){
+  projects.forEach(autoStatus);save();renderDashboard();
+  const list=projects.filter(p=>{
+    if((p.category||'drinks')!==activeCategory)return false;
+    if(activeFilter==='flagged')return p.flagged;
+    if(activeFilter!=='all'&&p.region!==activeFilter&&p.type!==activeFilter&&p.status!==activeFilter)return false;
+    if(searchQ&&!p.name.toLowerCase().includes(searchQ)&&!(p.owner||'').toLowerCase().includes(searchQ))return false;
+    return true;
+  });
+  if(currentView==='gantt'){renderGantt(list);return;}
+  const grps=[
+    ['uk-npd','UK New Product Development','UK · NPD','badge-uk',list.filter(p=>p.region==='UK'&&p.type==='NPD')],
+    ['uk-epd','UK Existing Product Development','UK · EPD','badge-uk',list.filter(p=>p.region==='UK'&&p.type==='EPD')],
+    ['us-npd','US New Product Development','US · NPD','badge-us',list.filter(p=>p.region==='US'&&p.type==='NPD')],
+    ['us-epd','US Existing Product Development','US · EPD','badge-us',list.filter(p=>p.region==='US'&&p.type==='EPD')],
+  ];
+  document.getElementById('cardsView').innerHTML=grps.map(([key,title,badge,bc,items])=>{
+    const isCol=!!collapsed[key];
+    const inner=items.length
+      ?`<div class="projects-grid ${bulkMode?'bulk-mode':''}">${items.map(renderCard).join('')}</div>`
+      :`<div class="empty-section">No projects here yet — hit <strong>+ New Project</strong> to add one.</div>`;
+    return`<div class="section-wrap">
+      <div class="section-header">
+        <span class="section-title">${title}</span>
+        <span class="section-badge ${bc}">${badge}</span>
+        <span class="section-count">(${items.length})</span>
+        <div class="section-rule"></div>
+        <button class="collapse-btn" onclick="toggleSection('${key}')">${isCol?'▼ Expand':'▲ Collapse'}</button>
+      </div>
+      <div class="section-body ${isCol?'collapsed':''}">${inner}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSection(key){collapsed[key]=!collapsed[key];render();}
+
+// ── VIEW & FILTER ──
+function setCategory(cat,btn){
+  activeCategory=cat;
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter='all';
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.filter-btn')?.classList.add('active');
+  render();
+}
+function setFilter(f,btn){activeFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function doSearch(q){searchQ=q.toLowerCase();render();}
+function setView(v){
+  currentView=v;
+  document.getElementById('cardsView').style.display=v==='cards'?'':'none';
+  document.getElementById('ganttView').style.display=v==='gantt'?'':'none';
+  document.getElementById('vCards').classList.toggle('active',v==='cards');
+  document.getElementById('vGantt').classList.toggle('active',v==='gantt');
+  render();
+}
+
+// ── MILESTONE TOGGLE ──
+function toggleMs(pid,ms){
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  p.milestones[ms].done=!p.milestones[ms].done;
+  touch(p,`${ms} marked ${p.milestones[ms].done?'complete ✓':'incomplete'}`);
+  save();render();
+}
+
+// ── NOTES ──
+function switchTab(id,tab){
+  ['dev','at'].forEach(t=>{
+    document.getElementById(`ntab-${t}-${id}`)?.classList.toggle('active',t===tab);
+    document.getElementById(`np-${t}-${id}`)?.classList.toggle('active',t===tab);
+  });
+}
+function saveDevNote(id,val){const p=projects.find(x=>x.id===id);if(!p)return;if(p.devNotes!==val){p.devNotes=val;touch(p,'Development notes updated');save();}}
+function saveAteamNote(id,val){const p=projects.find(x=>x.id===id);if(!p)return;if(p.ateamNotes!==val){p.ateamNotes=val;touch(p,'A-Team notes updated');save();}}
+
+// ── ACTIVITY LOG ──
+function toggleActivityLog(id){
+  const el=document.getElementById(`alog-${id}`);
+  const btn=document.getElementById(`atog-${id}`);
+  const open=el.classList.toggle('open');
+  btn.textContent=(open?'▾ ':'▸ ')+'Activity log';
+}
+
+// ── FLAG / DUPLICATE ──
+function toggleFlag(id){const p=projects.find(x=>x.id===id);if(!p)return;p.flagged=!p.flagged;touch(p,p.flagged?'🚨 Flagged as blocker':'Flag removed');save();render();}
+function duplicateProject(id){
+  const src=projects.find(x=>x.id===id);if(!src)return;
+  const newId=Math.max(...projects.map(x=>x.id))+1;
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id=newId;copy.name=src.name+' (copy)';copy.flagged=false;
+  copy.updatedAt=new Date().toISOString();
+  copy.activityLog=[{t:copy.updatedAt,msg:`Duplicated from "${src.name}"`}];
+  projects.push(copy);save();render();
+}
+
+// ── BULK ──
+function toggleBulkMode(){bulkMode=!bulkMode;selected.clear();document.getElementById('bulkBar').classList.toggle('visible',bulkMode);document.getElementById('bulkBtn').classList.toggle('active-mode',bulkMode);updateBulkCount();render();}
+function toggleSel(id,checked){checked?selected.add(id):selected.delete(id);updateBulkCount();}
+function updateBulkCount(){document.getElementById('bulkCount').textContent=`${selected.size} selected`;}
+function applyBulk(){
+  const status=document.getElementById('bulkSel').value;if(!status||!selected.size)return;
+  selected.forEach(id=>{const p=projects.find(x=>x.id===id);if(p){p.status=status;touch(p,`Status bulk-set to "${statusLabel(status)}"`); }});
+  save();toggleBulkMode();
+}
+
+// ── EXPORT CSV ──
+function exportCSV(){
+  const hdrs=['Name','Region','Type','Status','Owner','Digital Launch','Marketing Launch','Retail Launches','SKUs','Progress %','Flagged',
+    ...MS.map(m=>m+' Target'),...MS.map(m=>m+' Done'),'Dev Notes','A-Team Notes'];
+  const rows=projects.map(p=>[
+    p.name,p.region,p.type,statusLabel(p.status),p.owner||'',p.digitalLaunch||'',p.marketingLaunch||'',
+    (p.retailLaunches||[]).map(r=>r.retailer+(r.date?' ('+fmtDate(r.date)+')':'')).join(' | '),
+    (p.skus||[]).map(s=>s.name+(s.code?' ['+s.code+']':'')+' ('+s.type+')').join(' | '),
+    getPct(p),p.flagged?'Yes':'No',
+    ...MS.map(m=>p.milestones[m]?.date||''),
+    ...MS.map(m=>p.milestones[m]?.done?'Yes':'No'),
+    (p.devNotes||'').replace(/\n/g,' '),(p.ateamNotes||'').replace(/\n/g,' ')
+  ]);
+  const csv=[hdrs,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`trip-projects-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── MODAL RETAILER INPUTS ──
+function getRetailerOptions(region,selected=''){
+  const opts=(region==='US'?US_RETAILERS:UK_RETAILERS);
+  return opts.map(r=>`<option value="${r}" ${r===selected?'selected':''}>${r}</option>`).join('');
+}
+function addRetailerInput(retailer='',date=''){
+  const region=document.getElementById('f_region').value;
+  const div=document.createElement('div');
+  div.className='retailer-input-row';
+  div.innerHTML=`
+    <select onchange="">${getRetailerOptions(region,retailer)}</select>
+    <input type="date" value="${date}" placeholder="Launch date">
+    <button type="button" class="retailer-remove" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('retailerInputs').appendChild(div);
+}
+function getRetailersFromModal(){
+  return Array.from(document.querySelectorAll('#retailerInputs .retailer-input-row')).map(row=>{
+    const sel=row.querySelector('select');const dt=row.querySelector('input[type="date"]');
+    return{retailer:sel?sel.value:'',date:dt?dt.value:''};
+  }).filter(r=>r.retailer);
+}
+
+// ── MODAL SKU INPUTS ──
+function addSkuInput(name='',code='',type='Single',artworkUrl=''){
+  const div=document.createElement('div');
+  div.className='sku-modal-row';
+  div.innerHTML=`
+    <input type="text" value="${name}" placeholder="e.g. 330ml Single Can">
+    <input type="text" value="${code}" placeholder="e.g. TRP-001" style="font-family:monospace;font-size:11px;">
+    <select>${SKU_TYPES.map(t=>`<option value="${t}" ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+    <input type="text" value="${artworkUrl}" placeholder="https://… artwork link">
+    <button type="button" class="retailer-remove" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('skuInputs').appendChild(div);
+}
+function getSkusFromModal(){
+  return Array.from(document.querySelectorAll('#skuInputs .sku-modal-row')).map(row=>{
+    const inputs=row.querySelectorAll('input');
+    const sel=row.querySelector('select');
+    return{name:inputs[0]?.value||'',code:inputs[1]?.value||'',type:sel?sel.value:'Single',artworkUrl:inputs[2]?.value||''};
+  }).filter(s=>s.name);
+}
+
+// ── MILESTONE DATES ──
+function buildMsDates(mls){
+  return MS.map(ms=>{
+    const val=mls?.[ms]?.date||'';
+    return`<div class="ms-row"><label>${ms}</label><input type="date" id="ms_${ms.replace(/[\s\/]/g,'_')}" value="${val}"></div>`;
+  }).join('');
+}
+
+// ── OPEN/SAVE MODAL ──
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='New Project';
+  ['f_name','f_owner','f_devNotes','f_ateamNotes','f_digitalLaunch','f_marketingLaunch','f_recipeUrl','f_specUrl','f_pricingUrl'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_category').value=activeCategory;
+  document.getElementById('f_region').value='UK';document.getElementById('f_type').value='NPD';
+  document.getElementById('f_status').value='on-track';
+  document.getElementById('retailerInputs').innerHTML='';
+  document.getElementById('skuInputs').innerHTML='';
+  document.getElementById('msDatesGrid').innerHTML=buildMsDates({});
+  document.getElementById('projectModal').classList.add('open');
+  setTimeout(()=>document.getElementById('f_name').focus(),100);
+}
+function openEditModal(id){
+  editingId=id;const p=projects.find(x=>x.id===id);
+  document.getElementById('modalTitle').textContent='Edit Project';
+  document.getElementById('f_name').value=p.name;
+  document.getElementById('f_category').value=p.category||'drinks';
+  document.getElementById('f_region').value=p.region;document.getElementById('f_type').value=p.type;
+  document.getElementById('f_status').value=p.status;document.getElementById('f_owner').value=p.owner||'';
+  document.getElementById('f_digitalLaunch').value=p.digitalLaunch||'';
+  document.getElementById('f_marketingLaunch').value=p.marketingLaunch||'';
+  document.getElementById('f_recipeUrl').value=p.recipeUrl||'';
+  document.getElementById('f_specUrl').value=p.specUrl||'';
+  document.getElementById('f_pricingUrl').value=p.pricingUrl||'';
+  document.getElementById('f_devNotes').value=p.devNotes||'';document.getElementById('f_ateamNotes').value=p.ateamNotes||'';
+  // retailers
+  document.getElementById('retailerInputs').innerHTML='';
+  (p.retailLaunches||[]).forEach(r=>addRetailerInput(r.retailer,r.date));
+  // skus
+  document.getElementById('skuInputs').innerHTML='';
+  (p.skus||[]).forEach(s=>addSkuInput(s.name,s.code,s.type,s.artworkUrl||''));
+  document.getElementById('msDatesGrid').innerHTML=buildMsDates(p.milestones);
+  document.getElementById('projectModal').classList.add('open');
+}
+function closeModal(){document.getElementById('projectModal').classList.remove('open');}
+function saveProject(){
+  const name=document.getElementById('f_name').value.trim();
+  if(!name){alert('Please enter a project name.');return;}
+  const mls={};
+  MS.forEach(ms=>{
+    const key='ms_'+ms.replace(/[\s\/]/g,'_');
+    const ex=editingId?(projects.find(x=>x.id===editingId)?.milestones?.[ms]||{}):{};
+    mls[ms]={done:ex.done||false,date:document.getElementById(key)?.value||''};
+  });
+  const now=new Date().toISOString();
+  const retailers=getRetailersFromModal();
+  const skus=getSkusFromModal();
+  if(editingId){
+    const p=projects.find(x=>x.id===editingId);
+    p.name=name;p.region=document.getElementById('f_region').value;p.type=document.getElementById('f_type').value;
+    p.category=document.getElementById('f_category').value;
+    p.status=document.getElementById('f_status').value;p.owner=document.getElementById('f_owner').value;
+    p.digitalLaunch=document.getElementById('f_digitalLaunch').value;
+    p.marketingLaunch=document.getElementById('f_marketingLaunch').value;
+    p.recipeUrl=document.getElementById('f_recipeUrl').value;
+    p.specUrl=document.getElementById('f_specUrl').value;
+    p.pricingUrl=document.getElementById('f_pricingUrl').value;
+    p.retailLaunches=retailers;p.skus=skus;
+    p.devNotes=document.getElementById('f_devNotes').value;p.ateamNotes=document.getElementById('f_ateamNotes').value;
+    p.milestones=mls;touch(p,'Project details updated');
+  }else{
+    const newId=projects.length?Math.max(...projects.map(x=>x.id))+1:1;
+    projects.push({id:newId,name,region:document.getElementById('f_region').value,type:document.getElementById('f_type').value,
+      category:document.getElementById('f_category').value,
+      status:document.getElementById('f_status').value,owner:document.getElementById('f_owner').value,
+      digitalLaunch:document.getElementById('f_digitalLaunch').value,
+      marketingLaunch:document.getElementById('f_marketingLaunch').value,
+      recipeUrl:document.getElementById('f_recipeUrl').value,
+      specUrl:document.getElementById('f_specUrl').value,
+      pricingUrl:document.getElementById('f_pricingUrl').value,
+      retailLaunches:retailers,skus,
+      devNotes:document.getElementById('f_devNotes').value,ateamNotes:document.getElementById('f_ateamNotes').value,
+      flagged:false,updatedAt:now,activityLog:[{t:now,msg:'Project created'}],milestones:mls});
+  }
+  save();closeModal();render();
+}
+
+// ── DELETE ──
+function askDelete(id){deletingId=id;document.getElementById('confirmName').textContent=projects.find(x=>x.id===id)?.name;document.getElementById('confirmOverlay').classList.add('open');}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');}
+function confirmDelete(){projects=projects.filter(x=>x.id!==deletingId);save();closeConfirm();render();}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  const tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  if(e.key==='n'||e.key==='N')openAddModal();
+  if(e.key==='Escape'){closeModal();closeConfirm();}
+});
+document.getElementById('projectModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeConfirm();});
+
+// ── RESET ──
+function resetData(){
+  if(!confirm('This will clear all saved data and reload your default projects. Continue?'))return;
+  localStorage.removeItem(STORE_KEY);
+  const url = SCRIPT_URL + '?action=save&data=' + encodeURIComponent('[]');
+  fetch(url, {mode:'no-cors'}).catch(()=>{});
+  location.reload();
+}
+
+// ── INIT: load from Sheets first, fall back to localStorage, then seed ──
+(async function init(){
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '30%';
+
+  const fromSheets = await loadFromSheets();
+  bar.style.width = '80%';
+
+  if(!fromSheets){
+    // sheets had nothing or was unreachable — use localStorage or seed already set above
+    const stored = localStorage.getItem(STORE_KEY);
+    if(stored){
+      try{ projects = JSON.parse(stored); }catch(e){}
+    }
+    // if projects is still the seed from above, save it up to sheets
+    if(projects && projects.length > 0){
+      save();
+    }
+  }
+
+  bar.style.width = '100%';
+  setTimeout(()=>{
+    document.getElementById('loadingOverlay').style.display='none';
+    render();
+  }, 300);
+})();
+</script>
+</body>
+</html>
