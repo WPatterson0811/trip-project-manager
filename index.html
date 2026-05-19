@@ -8,7 +8,7 @@
 <style>
 :root {
   --navy:#1C1C4C; --pink:#F8BED5; --cherry:#E9A4C4;
-  --white:#ffffff; --green:#16a34a; --red:#dc2626;
+  --white:#ffffff; --green:#16a34a; --red:#dc2626; --orange:#d97706;
   --gray:#64748b; --light-gray:#e2e8f0; --off-white:#fdf8fb;
   --uk-band:#dbeafe; --us-band:#fef3c7;
   --card-shadow:0 2px 20px rgba(28,28,76,0.07);
@@ -129,8 +129,36 @@ main{padding:28px 40px;}
 .milestone.done .milestone-label{color:var(--navy);font-weight:600;}
 .milestone.active .milestone-label{color:var(--navy);font-weight:700;}
 .milestone.overdue .milestone-label{color:var(--red);font-weight:600;}
-.milestone-date{font-size:7.5px;color:var(--gray);text-align:center;}
-.milestone.overdue .milestone-date{color:var(--red);}
+.milestone-date{font-size:7.5px;color:#1C1C4C;text-align:center;font-weight:500;opacity:0.75;}
+.milestone.overdue .milestone-date{color:var(--red);opacity:1;font-weight:700;}
+
+/* COGs breakdown */
+.cogs-section{margin:0 18px 12px;border:1.5px solid var(--light-gray);border-radius:8px;overflow:hidden;}
+.cogs-header{background:var(--off-white);border-bottom:1.5px solid var(--light-gray);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;}
+.cogs-header-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:6px;}
+.cogs-header-title span{color:var(--cherry);}
+.cogs-body{padding:8px 12px;}
+.cogs-table{width:100%;border-collapse:collapse;font-size:11px;}
+.cogs-table th{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);padding:4px 8px;border-bottom:1.5px solid var(--light-gray);text-align:left;}
+.cogs-table td{padding:5px 8px;border-bottom:1px solid var(--light-gray);vertical-align:middle;}
+.cogs-table tr:last-child td{border-bottom:none;}
+.cogs-sku-name{font-weight:700;color:var(--navy);}
+.cogs-val{font-family:monospace;font-size:11px;color:var(--navy);}
+.cogs-target-hit{color:#16a34a;font-weight:700;}
+.cogs-target-miss{color:#dc2626;font-weight:700;}
+.cogs-modal-row{background:var(--off-white);border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1.5px solid var(--light-gray);}
+.cogs-modal-row-title{font-size:10px;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.cogs-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.cogs-field{display:flex;flex-direction:column;gap:3px;}
+.cogs-field label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);}
+.cogs-field input{border:1.5px solid var(--light-gray);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--navy);outline:none;}
+.cogs-field input:focus{border-color:var(--cherry);}
+.cogs-optional-row{display:flex;gap:8px;margin-top:8px;}
+.cogs-optional-label{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;cursor:pointer;text-transform:none;letter-spacing:0;}
+.at-risk-milestone .milestone-dot{background:var(--orange)!important;border-color:var(--orange)!important;}
+.at-risk-milestone .milestone-label{color:#d97706!important;font-weight:700!important;}
+.delayed-milestone .milestone-dot{background:var(--red)!important;border-color:var(--red)!important;}
+.delayed-milestone .milestone-label{color:var(--red)!important;font-weight:700!important;}
 
 /* LAUNCH DATES STRIP */
 .launch-strip{margin:0 18px 12px;background:var(--off-white);border:1.5px solid var(--light-gray);border-radius:8px;overflow:hidden;}
@@ -299,7 +327,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
   .sku-modal-row{grid-template-columns:1fr 1fr 32px;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script>
+// Load PptxGenJS asynchronously - page works even if CDN is unavailable
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+  s.async = true;
+  s.onerror = function(){ window._pptxFailed = true; };
+  document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 
@@ -399,28 +436,56 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
     <!-- CORE FIELDS -->
     <div class="form-grid">
       <div class="form-group full"><label>Project Name</label><input type="text" id="f_name" placeholder="e.g. Lemon Ginger CBD Can"></div>
-      <div class="form-group"><label>Category</label><select id="f_category"><option value="drinks">🥤 Drinks</option><option value="supps">💊 Supps</option></select></div>
+      <div class="form-group"><label>Category</label><select id="f_category" onchange="updateRtoFields()"><option value="drinks">🥤 Drinks</option><option value="supps">💊 Supps</option></select></div>
       <div class="form-group"><label>Region</label><select id="f_region"><option value="UK">🇬🇧 UK</option><option value="US">🇺🇸 US</option></select></div>
       <div class="form-group"><label>Type</label><select id="f_type"><option value="NPD">NPD</option><option value="EPD">EPD</option></select></div>
       <div class="form-group"><label>Status</label><select id="f_status"><option value="on-track">On Track</option><option value="at-risk">At Risk</option><option value="delayed">Delayed</option><option value="complete">Complete</option></select></div>
       <div class="form-group"><label>Owner</label><input type="text" id="f_owner" placeholder="e.g. Liv M."></div>
+      <div class="form-group"><label>Supplier</label><input type="text" id="f_supplier" placeholder="e.g. Doehler UK"></div>
+      <div class="form-group"><label>Manufacturer</label><input type="text" id="f_manufacturer" placeholder="e.g. Cawston Press"></div>
       <div class="form-group full"><label>Project Updates</label><textarea id="f_devNotes" rows="2" placeholder="Key updates, decisions, blockers, next steps…"></textarea></div>
       <div class="form-group full"><label>A-Team Notes</label><textarea id="f_ateamNotes" rows="2" placeholder="A-team actions, feedback, sign-off comments…"></textarea></div>
     </div>
 
     <!-- DOCUMENT LINKS -->
     <div class="modal-section-title">📄 Signed Off Documents</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="f_showRecipe" onchange="toggleDocField('recipe')" style="accent-color:var(--cherry);width:14px;height:14px;"> Show Recipe link
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="f_showSpec" onchange="toggleDocField('spec')" style="accent-color:var(--cherry);width:14px;height:14px;"> Show Specification link
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="f_showPricing" onchange="toggleDocField('pricing')" style="accent-color:var(--cherry);width:14px;height:14px;"> Show Agreed Pricing link
+      </label>
+    </div>
     <div class="form-grid">
-      <div class="form-group full"><label>Signed Off Recipe (URL)</label><input type="text" id="f_recipeUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
-      <div class="form-group full"><label>Signed Off Specification (URL)</label><input type="text" id="f_specUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
-      <div class="form-group full"><label>Agreed Pricing (URL)</label><input type="text" id="f_pricingUrl" placeholder="https://drive.google.com/… or SharePoint link"></div>
+      <div class="form-group full" id="docField_recipe" style="display:none"><label>Signed Off Recipe (URL)</label><input type="text" id="f_recipeUrl" placeholder="https://drive.google.com/…"></div>
+      <div class="form-group full" id="docField_spec" style="display:none"><label>Signed Off Specification (URL)</label><input type="text" id="f_specUrl" placeholder="https://drive.google.com/…"></div>
+      <div class="form-group full" id="docField_pricing" style="display:none"><label>Agreed Pricing (URL)</label><input type="text" id="f_pricingUrl" placeholder="https://drive.google.com/…"></div>
     </div>
 
     <!-- LAUNCH DATES -->
     <div class="modal-section-title">🚀 Launch Dates</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="f_showDigital" onchange="toggleLaunchField('digital')" style="accent-color:var(--cherry);width:14px;height:14px;"> Digital Launch
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="f_showMarketing" onchange="toggleLaunchField('marketing')" style="accent-color:var(--cherry);width:14px;height:14px;"> Marketing Launch
+      </label>
+    </div>
     <div class="form-grid">
-      <div class="form-group"><label>Digital Launch Date</label><input type="date" id="f_digitalLaunch"></div>
-      <div class="form-group"><label>Marketing Launch Date</label><input type="date" id="f_marketingLaunch"></div>
+      <div class="form-group" id="launchField_digital" style="display:none"><label>Digital Launch Date</label><input type="date" id="f_digitalLaunch"></div>
+      <div class="form-group" id="launchField_marketing" style="display:none"><label>Marketing Launch Date</label><input type="date" id="f_marketingLaunch"></div>
+    </div>
+    <div id="rtoExtraWrap" style="display:none;margin-top:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;">🚢 US Freight RTO Dates (Supps)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>RTO — Sea Freight</label><input type="date" id="f_rtoSea"></div>
+        <div class="form-group"><label>RTO — Air Freight</label><input type="date" id="f_rtoAir"></div>
+      </div>
     </div>
     <div class="modal-section-title" style="margin-top:14px;border-top:none;padding-top:0;">🛒 Retail Launch Dates</div>
     <div id="retailerInputs"></div>
@@ -437,6 +502,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
     </div>
     <div id="skuInputs"></div>
     <button class="add-sku-btn" onclick="addSkuInput()">+ Add SKU</button>
+
+    <!-- COGs BREAKDOWN -->
+    <div class="modal-section-title">💰 COGs Breakdown (per SKU)</div>
+    <div id="cogInputs"></div>
+    <button class="add-sku-btn" onclick="addCogInput()">+ Add COGs Row</button>
 
     <!-- MILESTONES -->
     <div class="modal-section-title">📅 Milestone Target Dates</div>
@@ -462,11 +532,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
 
 <script>
 // ── CONSTANTS ──
-const MS = ['Gate 1','Gate 2','Recipe Sign Off','MPC Creation','Artwork FTP','Ingredient PO','Gate 3','First Production','RTO','Digital Launch Date','Retail Launch Date','Marketing Launch Date'];
+const MS = ['Gate 1','Recipe Sign Off','Gate 2','MPC Creation','Artwork FTP','Ingredient PO','Gate 3','First Production','RTO','Digital Launch Date','Retail Launch Date','Marketing Launch Date'];
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-const STORE_KEY = 'trip_pm_v7';
+const STORE_KEY = 'trip_pm_v8';
 
-const UK_RETAILERS = ['Waitrose','Sainsbury\'s','Tesco','Boots','Holland & Barrett','Whole Foods','Selfridges','ASOS','Amazon UK','Ocado','Other'];
+const UK_RETAILERS = ['Waitrose','Morrisons','Sainsbury\'s','Tesco','Boots','Holland & Barrett','Whole Foods','Selfridges','ASOS','Amazon UK','Ocado','Other'];
 const US_RETAILERS = ['Whole Foods','Target','Walmart','Sprouts','Amazon US','Erewhon','Thrive Market','Trader Joe\'s','Kroger','Other'];
 const SKU_TYPES = ['Single','Mixed Pack','Hero SKU','Multipack','Gift Set','Starter Pack'];
 
@@ -490,7 +560,7 @@ if (!projects) {
       devNotes:'Quote attached for 2MT and 10MT.\n\nTRIP CIU Target: £28p/L',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-14'},'Digital Launch Date':{done:false,date:'2026-09-14'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'Gate 2':{done:true,date:'2026-04-09'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-14'},'Digital Launch Date':{done:false,date:'2026-09-14'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
 
     { id:2, name:'Peach Revamp', region:'UK', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
@@ -504,7 +574,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'Gate 2':{done:false,date:'2026-06-12'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
 
     { id:3, name:'Watermelon', region:'UK', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'2027-05-28',
@@ -518,7 +588,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-09-04'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'Gate 2':{done:false,date:'2026-07-17'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-09-04'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}},
 
     // ── UK EPD ──
     { id:4, name:'Elderflower Mint MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
@@ -529,7 +599,7 @@ if (!projects) {
       devNotes:'',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+      milestones:{'Gate 1':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'Gate 2':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
 
     { id:5, name:'Raspberry Orange Blossom MB EPD', region:'UK', type:'EPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'',
@@ -539,7 +609,7 @@ if (!projects) {
       devNotes:'',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:''},'Gate 2':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
+      milestones:{'Gate 1':{done:false,date:''},'Recipe Sign Off':{done:false,date:''},'Gate 2':{done:false,date:''},'MPC Creation':{done:false,date:''},'Artwork FTP':{done:false,date:''},'Ingredient PO':{done:false,date:''},'Gate 3':{done:false,date:''},'First Production':{done:false,date:''},'RTO':{done:false,date:''},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:''}}},
 
     // ── US NPD ──
     { id:6, name:'Frosted Blackberry', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
@@ -555,7 +625,7 @@ if (!projects) {
       devNotes:'US Pricing - https://drive.google.com/file/d/13SvOiiG84thsBj4d_Z2RuapikzgneRWa/view?usp=sharing',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Gate 2':{done:true,date:'2026-04-09'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-21'},'Digital Launch Date':{done:false,date:'2026-09-21'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
+      milestones:{'Gate 1':{done:true,date:'2026-02-15'},'Recipe Sign Off':{done:true,date:'2026-04-03'},'Gate 2':{done:true,date:'2026-04-09'},'MPC Creation':{done:true,date:'2026-04-10'},'Artwork FTP':{done:false,date:'2026-05-29'},'Ingredient PO':{done:false,date:'2026-05-22'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-08-29'},'RTO':{done:false,date:'2026-09-21'},'Digital Launch Date':{done:false,date:'2026-09-21'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-02'}}},
 
     { id:7, name:'Peach Revamp', region:'US', type:'NPD', status:'at-risk', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'2026-11-13', marketingLaunch:'2026-11-13',
@@ -568,7 +638,7 @@ if (!projects) {
       devNotes:'Liv to taste samples w/c 15/05',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-06-12'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
+      milestones:{'Gate 1':{done:false,date:'2026-05-18'},'Recipe Sign Off':{done:false,date:'2026-06-05'},'Gate 2':{done:false,date:'2026-06-12'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-07-31'},'Ingredient PO':{done:false,date:'2026-07-03'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-10-23'},'RTO':{done:false,date:'2026-11-13'},'Digital Launch Date':{done:false,date:'2026-11-13'},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2026-11-13'}}},
 
     { id:8, name:'Watermelon', region:'US', type:'NPD', status:'on-track', owner:'Will Patterson', flagged:false, category:'drinks',
       digitalLaunch:'', marketingLaunch:'2027-05-28',
@@ -581,7 +651,7 @@ if (!projects) {
       devNotes:'Brief shared with Doehler',
       ateamNotes:'',
       updatedAt:now, activityLog:mkLog(),
-      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Gate 2':{done:false,date:'2026-07-17'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-08-21'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}}
+      milestones:{'Gate 1':{done:true,date:'2026-05-18'},'Recipe Sign Off':{done:false,date:'2026-06-26'},'Gate 2':{done:false,date:'2026-07-17'},'MPC Creation':{done:false,date:'2026-06-12'},'Artwork FTP':{done:false,date:'2026-08-21'},'Ingredient PO':{done:false,date:'2026-09-04'},'Gate 3':{done:false,date:''},'First Production':{done:false,date:'2026-11-27'},'RTO':{done:false,date:'2026-12-18'},'Digital Launch Date':{done:false,date:''},'Retail Launch Date':{done:false,date:''},'Marketing Launch Date':{done:false,date:'2027-05-28'}}}
 
   ];
   save();
@@ -673,29 +743,22 @@ function activeMilestone(p){const i=MS.findIndex(k=>!p.milestones[k]?.done);retu
 
 // ── LAUNCH STRIP RENDER ──
 function renderLaunchStrip(p){
-  const digital=p.digitalLaunch?fmtDate(p.digitalLaunch):'TBC';
-  const mkt=p.marketingLaunch?fmtDate(p.marketingLaunch):'TBC';
   const retailers=p.retailLaunches||[];
   const retailHtml=retailers.length?retailers.map(r=>
     `<div class="retailer-chip ${p.region==='US'?'us':''}">${r.retailer}${r.date?': '+fmtDate(r.date):''}</div>`
   ).join(''):'<span style="font-size:10px;color:var(--gray);opacity:.7">No retailers added yet</span>';
 
+  const cells = [];
+  if(p.digitalLaunch) cells.push(`<div class="launch-date-cell"><div class="ldc-label">💻 Digital</div><div class="ldc-val">${fmtDate(p.digitalLaunch)}</div></div>`);
+  if(p.marketingLaunch) cells.push(`<div class="launch-date-cell"><div class="ldc-label">📣 Marketing</div><div class="ldc-val">${fmtDate(p.marketingLaunch)}</div></div>`);
+  if(p.rtoSea) cells.push(`<div class="launch-date-cell"><div class="ldc-label">🚢 RTO Sea</div><div class="ldc-val">${fmtDate(p.rtoSea)}</div></div>`);
+  if(p.rtoAir) cells.push(`<div class="launch-date-cell"><div class="ldc-label">✈️ RTO Air</div><div class="ldc-val">${fmtDate(p.rtoAir)}</div></div>`);
+  cells.push(`<div class="launch-date-cell"><div class="ldc-label">🛒 Retail</div><div class="retailers-list">${retailHtml}</div></div>`);
+
+  const gridCols = `grid-template-columns:${cells.map(()=>'1fr').join(' ')}`;
   return`<div class="launch-strip">
     <div class="launch-strip-header">🚀 <span>Launch Dates</span></div>
-    <div class="launch-dates-grid">
-      <div class="launch-date-cell">
-        <div class="ldc-label">💻 Digital</div>
-        <div class="ldc-val ${p.digitalLaunch?'':'tbc'}">${digital}</div>
-      </div>
-      <div class="launch-date-cell">
-        <div class="ldc-label">📣 Marketing</div>
-        <div class="ldc-val ${p.marketingLaunch?'':'tbc'}">${mkt}</div>
-      </div>
-      <div class="launch-date-cell">
-        <div class="ldc-label">🛒 Retail</div>
-        <div class="retailers-list">${retailHtml}</div>
-      </div>
-    </div>
+    <div class="launch-dates-grid" style="${gridCols}">${cells.join('')}</div>
   </div>`;
 }
 
@@ -762,6 +825,51 @@ function renderRangeSection(p){
   </div>`;
 }
 
+// ── COGs SECTION RENDER ──
+function renderCogsSection(p){
+  const cogs = p.cogs||[];
+  if(!cogs.length) return `<div class="cogs-section">
+    <div class="cogs-header"><div class="cogs-header-title">💰 <span>COGs Breakdown</span></div>
+    <button class="range-add-btn" onclick="openEditModal(${p.id})">Add COGs</button></div>
+    <div style="padding:12px;font-size:11px;color:var(--gray);text-align:center;opacity:.7">No COGs data yet — click Edit to add</div></div>`;
+
+  const rows = cogs.map(c => {
+    const total = c.totalCog||0;
+    const target = c.targetCog||0;
+    const hit = target && parseFloat(total)<=parseFloat(target);
+    const statusHtml = target
+      ? `<span class="${hit?'cogs-target-hit':'cogs-target-miss'}">${hit?'✓ On target':'✗ Over target'}</span>`
+      : '—';
+    const breakdown = [
+      c.ingredients ? `Ingredients: £${c.ingredients}` : null,
+      c.packaging   ? `Packaging: £${c.packaging}` : null,
+      c.rework      ? `Rework: £${c.rework}` : null,
+      c.freight     ? `Freight: £${c.freight}` : null,
+      c.tariffs     ? `Tariffs: £${c.tariffs}` : null,
+    ].filter(Boolean).join(' · ');
+    return `<tr>
+      <td class="cogs-sku-name">${c.skuName||'—'}</td>
+      <td class="cogs-val">£${total||'—'}</td>
+      <td class="cogs-val">${target?'£'+target:'—'}</td>
+      <td>${statusHtml}</td>
+      <td style="font-size:10px;color:var(--gray)">${breakdown||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="cogs-section">
+    <div class="cogs-header">
+      <div class="cogs-header-title">💰 <span>COGs Breakdown</span></div>
+      <button class="range-add-btn" onclick="openEditModal(${p.id})">Edit COGs</button>
+    </div>
+    <div class="cogs-body">
+      <table class="cogs-table">
+        <thead><tr><th>SKU</th><th>Total COG</th><th>Target</th><th>Status</th><th>Breakdown</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
 // ── CARD RENDER ──
 function renderCard(p){
   autoStatus(p);
@@ -771,7 +879,11 @@ function renderCard(p){
     const m=p.milestones[ms]||{};
     const done=m.done, od=!done&&m.date&&dayDiff(m.date)<0;
     const isActive=ms===activeMs&&!done;
-    const cls=done?'done':od?'overdue':isActive?'active':'';
+    // Colour the active milestone based on project status
+    let statusCls2='';
+    if(isActive && p.status==='at-risk') statusCls2=' at-risk-milestone';
+    if(isActive && p.status==='delayed') statusCls2=' delayed-milestone';
+    const cls=(done?'done':od?'overdue':isActive?'active':'')+statusCls2;
     const icon=done?'✓':od?'!':'';
     return`<div class="milestone ${cls}">
       <div class="tt"><div class="milestone-dot" onclick="toggleMs(${p.id},'${ms}')">${icon}</div>
@@ -799,6 +911,8 @@ function renderCard(p){
         <div class="card-meta">
           ${p.owner?`<span>👤 ${p.owner}</span>`:''}
           <span>${p.region==='UK'?'🇬🇧':'🇺🇸'} ${p.region}</span>
+          ${p.supplier?`<span>🏭 ${p.supplier}</span>`:''}
+          ${p.manufacturer?`<span>🔧 ${p.manufacturer}</span>`:''}
           ${countdownPill(p)}
         </div>
       </div>
@@ -817,6 +931,7 @@ function renderCard(p){
     ${renderLaunchStrip(p)}
     ${renderDocsSection(p)}
     ${renderRangeSection(p)}
+    ${renderCogsSection(p)}
     <div class="notes-section">
       <div class="notes-tabs">
         <button class="notes-tab active" id="ntab-dev-${p.id}" onclick="switchTab(${p.id},'dev')">
@@ -1283,6 +1398,74 @@ function exportCSV(){
   a.click();
 }
 
+// ── MODAL TOGGLE HELPERS ──
+function toggleDocField(type){
+  const cb = document.getElementById(`f_show${type.charAt(0).toUpperCase()+type.slice(1)}`);
+  const field = document.getElementById(`docField_${type}`);
+  if(field) field.style.display = cb.checked ? '' : 'none';
+  if(!cb.checked && document.getElementById(`f_${type}Url`)) document.getElementById(`f_${type}Url`).value='';
+}
+function toggleLaunchField(type){
+  const cb = document.getElementById(`f_show${type.charAt(0).toUpperCase()+type.slice(1)}`);
+  const field = document.getElementById(`launchField_${type}`);
+  if(field) field.style.display = cb.checked ? '' : 'none';
+  if(!cb.checked && document.getElementById(`f_${type}Launch`)) document.getElementById(`f_${type}Launch`).value='';
+}
+function updateRtoFields(){
+  const cat = document.getElementById('f_category')?.value;
+  const wrap = document.getElementById('rtoExtraWrap');
+  if(wrap) wrap.style.display = (cat==='supps') ? '' : 'none';
+}
+
+// ── MODAL COG INPUTS ──
+function addCogInput(skuName='',totalCog='',targetCog='',ingredients='',packaging='',rework='',freight='',tariffs=''){
+  const hasFreight = !!freight, hasTariffs = !!tariffs;
+  const div=document.createElement('div');
+  div.className='cogs-modal-row';
+  div.innerHTML=`
+    <div class="cogs-modal-row-title">
+      <input type="text" value="${skuName}" placeholder="SKU Name (e.g. 12 x 250ml MB)" style="flex:1;border:1.5px solid var(--light-gray);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:700;color:var(--navy);outline:none;">
+      <button type="button" class="retailer-remove" onclick="this.closest('.cogs-modal-row').remove()">×</button>
+    </div>
+    <div class="cogs-fields">
+      <div class="cogs-field"><label>Total COG (£)</label><input type="number" step="0.01" value="${totalCog}" placeholder="e.g. 1.25"></div>
+      <div class="cogs-field"><label>Target COG (£)</label><input type="number" step="0.01" value="${targetCog}" placeholder="e.g. 1.10"></div>
+      <div class="cogs-field"><label>Ingredients (£)</label><input type="number" step="0.01" value="${ingredients}" placeholder="0.00"></div>
+      <div class="cogs-field"><label>Packaging (£)</label><input type="number" step="0.01" value="${packaging}" placeholder="0.00"></div>
+      <div class="cogs-field"><label>Rework (£)</label><input type="number" step="0.01" value="${rework}" placeholder="0.00"></div>
+    </div>
+    <div class="cogs-optional-row">
+      <label class="cogs-optional-label"><input type="checkbox" ${hasFreight?'checked':''} onchange="toggleCogOptional(this,'freight')" style="accent-color:var(--cherry);width:13px;height:13px;"> Freight</label>
+      <label class="cogs-optional-label"><input type="checkbox" ${hasTariffs?'checked':''} onchange="toggleCogOptional(this,'tariffs')" style="accent-color:var(--cherry);width:13px;height:13px;"> Tariffs</label>
+    </div>
+    <div class="cogs-fields cog-optional-fields" style="margin-top:8px;">
+      <div class="cogs-field cog-opt-freight" style="${hasFreight?'':'display:none'}"><label>Freight (£)</label><input type="number" step="0.01" value="${freight}" placeholder="0.00"></div>
+      <div class="cogs-field cog-opt-tariffs" style="${hasTariffs?'':'display:none'}"><label>Tariffs (£)</label><input type="number" step="0.01" value="${tariffs}" placeholder="0.00"></div>
+    </div>`;
+  document.getElementById('cogInputs').appendChild(div);
+}
+function toggleCogOptional(cb, type){
+  const row = cb.closest('.cogs-modal-row');
+  const field = row.querySelector(`.cog-opt-${type}`);
+  if(field){ field.style.display = cb.checked ? '' : 'none'; if(!cb.checked) field.querySelector('input').value=''; }
+}
+function getCogsFromModal(){
+  return Array.from(document.querySelectorAll('#cogInputs .cogs-modal-row')).map(row=>{
+    const inputs = row.querySelectorAll('input[type="number"]');
+    const nameInput = row.querySelector('input[type="text"]');
+    return {
+      skuName:     nameInput?.value||'',
+      totalCog:    inputs[0]?.value||'',
+      targetCog:   inputs[1]?.value||'',
+      ingredients: inputs[2]?.value||'',
+      packaging:   inputs[3]?.value||'',
+      rework:      inputs[4]?.value||'',
+      freight:     row.querySelector('.cog-opt-freight')?.style.display!=='none' ? (inputs[5]?.value||'') : '',
+      tariffs:     row.querySelector('.cog-opt-tariffs')?.style.display!=='none' ? (inputs[6]?.value||'') : '',
+    };
+  }).filter(c=>c.skuName);
+}
+
 // ── MODAL RETAILER INPUTS ──
 function getRetailerOptions(region,selected=''){
   const opts=(region==='US'?US_RETAILERS:UK_RETAILERS);
@@ -1337,13 +1520,17 @@ function buildMsDates(mls){
 function openAddModal(){
   editingId=null;
   document.getElementById('modalTitle').textContent='New Project';
-  ['f_name','f_owner','f_devNotes','f_ateamNotes','f_digitalLaunch','f_marketingLaunch','f_recipeUrl','f_specUrl','f_pricingUrl'].forEach(id=>document.getElementById(id).value='');
+  ['f_name','f_owner','f_supplier','f_manufacturer','f_devNotes','f_ateamNotes','f_digitalLaunch','f_marketingLaunch','f_recipeUrl','f_specUrl','f_pricingUrl','f_rtoSea','f_rtoAir'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['f_showRecipe','f_showSpec','f_showPricing','f_showDigital','f_showMarketing'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
+  ['docField_recipe','docField_spec','docField_pricing','launchField_digital','launchField_marketing'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   document.getElementById('f_category').value=activeCategory;
   document.getElementById('f_region').value='UK';document.getElementById('f_type').value='NPD';
   document.getElementById('f_status').value='on-track';
   document.getElementById('retailerInputs').innerHTML='';
   document.getElementById('skuInputs').innerHTML='';
+  document.getElementById('cogInputs').innerHTML='';
   document.getElementById('msDatesGrid').innerHTML=buildMsDates({});
+  updateRtoFields();
   document.getElementById('projectModal').classList.add('open');
   setTimeout(()=>document.getElementById('f_name').focus(),100);
 }
@@ -1354,11 +1541,24 @@ function openEditModal(id){
   document.getElementById('f_category').value=p.category||'drinks';
   document.getElementById('f_region').value=p.region;document.getElementById('f_type').value=p.type;
   document.getElementById('f_status').value=p.status;document.getElementById('f_owner').value=p.owner||'';
-  document.getElementById('f_digitalLaunch').value=p.digitalLaunch||'';
-  document.getElementById('f_marketingLaunch').value=p.marketingLaunch||'';
+  document.getElementById('f_supplier').value=p.supplier||'';
+  document.getElementById('f_manufacturer').value=p.manufacturer||'';
+  // doc toggles
+  const hasRecipe=!!(p.recipeUrl); const hasSpec=!!(p.specUrl); const hasPricing=!!(p.pricingUrl);
+  document.getElementById('f_showRecipe').checked=hasRecipe; document.getElementById('docField_recipe').style.display=hasRecipe?'':'none';
+  document.getElementById('f_showSpec').checked=hasSpec; document.getElementById('docField_spec').style.display=hasSpec?'':'none';
+  document.getElementById('f_showPricing').checked=hasPricing; document.getElementById('docField_pricing').style.display=hasPricing?'':'none';
   document.getElementById('f_recipeUrl').value=p.recipeUrl||'';
   document.getElementById('f_specUrl').value=p.specUrl||'';
   document.getElementById('f_pricingUrl').value=p.pricingUrl||'';
+  // launch toggles
+  const hasDigital=!!(p.digitalLaunch); const hasMktg=!!(p.marketingLaunch);
+  document.getElementById('f_showDigital').checked=hasDigital; document.getElementById('launchField_digital').style.display=hasDigital?'':'none';
+  document.getElementById('f_showMarketing').checked=hasMktg; document.getElementById('launchField_marketing').style.display=hasMktg?'':'none';
+  document.getElementById('f_digitalLaunch').value=p.digitalLaunch||'';
+  document.getElementById('f_marketingLaunch').value=p.marketingLaunch||'';
+  document.getElementById('f_rtoSea').value=p.rtoSea||'';
+  document.getElementById('f_rtoAir').value=p.rtoAir||'';
   document.getElementById('f_devNotes').value=p.devNotes||'';document.getElementById('f_ateamNotes').value=p.ateamNotes||'';
   // retailers
   document.getElementById('retailerInputs').innerHTML='';
@@ -1366,7 +1566,11 @@ function openEditModal(id){
   // skus
   document.getElementById('skuInputs').innerHTML='';
   (p.skus||[]).forEach(s=>addSkuInput(s.name,s.code,s.type,s.artworkUrl||''));
+  // cogs
+  document.getElementById('cogInputs').innerHTML='';
+  (p.cogs||[]).forEach(c=>addCogInput(c.skuName,c.totalCog,c.targetCog,c.ingredients,c.packaging,c.rework,c.freight,c.tariffs));
   document.getElementById('msDatesGrid').innerHTML=buildMsDates(p.milestones);
+  updateRtoFields();
   document.getElementById('projectModal').classList.add('open');
 }
 function closeModal(){document.getElementById('projectModal').classList.remove('open');}
@@ -1382,17 +1586,22 @@ function saveProject(){
   const now=new Date().toISOString();
   const retailers=getRetailersFromModal();
   const skus=getSkusFromModal();
+  const cogs=getCogsFromModal();
   if(editingId){
     const p=projects.find(x=>x.id===editingId);
     p.name=name;p.region=document.getElementById('f_region').value;p.type=document.getElementById('f_type').value;
     p.category=document.getElementById('f_category').value;
     p.status=document.getElementById('f_status').value;p.owner=document.getElementById('f_owner').value;
+    p.supplier=document.getElementById('f_supplier').value;
+    p.manufacturer=document.getElementById('f_manufacturer').value;
     p.digitalLaunch=document.getElementById('f_digitalLaunch').value;
     p.marketingLaunch=document.getElementById('f_marketingLaunch').value;
+    p.rtoSea=document.getElementById('f_rtoSea').value;
+    p.rtoAir=document.getElementById('f_rtoAir').value;
     p.recipeUrl=document.getElementById('f_recipeUrl').value;
     p.specUrl=document.getElementById('f_specUrl').value;
     p.pricingUrl=document.getElementById('f_pricingUrl').value;
-    p.retailLaunches=retailers;p.skus=skus;
+    p.retailLaunches=retailers;p.skus=skus;p.cogs=cogs;
     p.devNotes=document.getElementById('f_devNotes').value;p.ateamNotes=document.getElementById('f_ateamNotes').value;
     p.milestones=mls;touch(p,'Project details updated');
   }else{
@@ -1400,12 +1609,16 @@ function saveProject(){
     projects.push({id:newId,name,region:document.getElementById('f_region').value,type:document.getElementById('f_type').value,
       category:document.getElementById('f_category').value,
       status:document.getElementById('f_status').value,owner:document.getElementById('f_owner').value,
+      supplier:document.getElementById('f_supplier').value,
+      manufacturer:document.getElementById('f_manufacturer').value,
       digitalLaunch:document.getElementById('f_digitalLaunch').value,
       marketingLaunch:document.getElementById('f_marketingLaunch').value,
+      rtoSea:document.getElementById('f_rtoSea').value,
+      rtoAir:document.getElementById('f_rtoAir').value,
       recipeUrl:document.getElementById('f_recipeUrl').value,
       specUrl:document.getElementById('f_specUrl').value,
       pricingUrl:document.getElementById('f_pricingUrl').value,
-      retailLaunches:retailers,skus,
+      retailLaunches:retailers,skus,cogs,
       devNotes:document.getElementById('f_devNotes').value,ateamNotes:document.getElementById('f_ateamNotes').value,
       flagged:false,updatedAt:now,activityLog:[{t:now,msg:'Project created'}],milestones:mls});
   }
@@ -1414,6 +1627,10 @@ function saveProject(){
 
 // ── EXPORT POWERPOINT ──
 function exportPPT(){
+  if(typeof PptxGenJS === 'undefined'){
+    alert('PowerPoint export requires an internet connection to load the export library. Please open the tool from the GitHub Pages URL (https://wpatterson0811.github.io/trip-project-manager) rather than as a local file.');
+    return;
+  }
   const pres = new PptxGenJS();
   pres.layout = 'LAYOUT_WIDE';
   pres.title = 'TRIP Project Update';
@@ -1464,7 +1681,7 @@ function exportPPT(){
     const co = catProjects.filter(p=>p.status==='complete').length;
     const yBase = 4.3 + ci*0.55;
     titleSlide.addShape(pres.shapes.RECTANGLE, { x:0.5, y:yBase, w:12.3, h:0.45, fill:{color:cat==='drinks'?'1C3A6E':'3B1C6E'}, line:{color:NAVY,width:0}, rectRadius:0.05 });
-    titleSlide.addText(`${cat==='drinks'?'🥤 Drinks':'💊 Supps'}  |  ${catProjects.length} projects  —  On Track: ${on}  At Risk: ${ar}  Delayed: ${dl}  Complete: ${co}`,
+    titleSlide.addText(`${cat==='drinks'?'🥤 Drinks':'💊 Supps'}  |  ${catProjects.length} projects  —  ✅ On Track: ${on}  ⚠️ At Risk: ${ar}  🔴 Delayed: ${dl}  🟣 Complete: ${co}`,
       { x:0.7, y:yBase+0.05, w:12, h:0.35, fontSize:11, color:WHITE, bold:false, margin:0 });
   });
 
@@ -1478,145 +1695,254 @@ function exportPPT(){
     return s;
   }
 
-  // ── PROJECT SLIDE helper ──
+  // ── PROJECT SLIDE helper — single slide ──
   function addProjectSlide(p){
     autoStatus(p);
-    const pct = getPct(p);
     const sc  = statusColor(p.status);
     const sl  = statusLabel(p.status);
     const s   = pres.addSlide();
     s.background = { color: LIGHT };
 
-    // Left navy sidebar
-    s.addShape(pres.shapes.RECTANGLE, { x:0, y:0, w:0.18, h:7.5, fill:{color:NAVY}, line:{color:NAVY,width:0} });
+    // Left accent bar
+    s.addShape(pres.shapes.RECTANGLE, { x:0, y:0, w:0.18, h:7.5, fill:{color:CHERRY}, line:{color:CHERRY,width:0} });
 
-    // Header band
-    s.addShape(pres.shapes.RECTANGLE, { x:0.18, y:0, w:13.12, h:1.3, fill:{color:NAVY}, line:{color:NAVY,width:0} });
-
-    // Status pill
-    s.addShape(pres.shapes.RECTANGLE, { x:9.2, y:0.32, w:1.6, h:0.42, fill:{color:sc}, line:{color:sc,width:0}, rectRadius:0.1 });
-    s.addText(sl.toUpperCase(), { x:9.2, y:0.32, w:1.6, h:0.42, fontSize:9, bold:true, color:WHITE, align:'center', valign:'middle', margin:0 });
-
-    // Flagged badge
+    // ── HEADER ──
+    const HDR_H = 0.9;
+    s.addShape(pres.shapes.RECTANGLE, { x:0.18, y:0, w:13.12, h:HDR_H, fill:{color:NAVY}, line:{color:NAVY,width:0} });
+    // Status + tags
+    const tagY = 0.25;
+    s.addShape(pres.shapes.RECTANGLE,{x:9.2,y:tagY,w:1.5,h:0.34,fill:{color:sc},line:{color:sc,width:0},rectRadius:0.07});
+    s.addText(sl.toUpperCase(),{x:9.2,y:tagY,w:1.5,h:0.34,fontSize:8,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
     if(p.flagged){
-      s.addShape(pres.shapes.RECTANGLE, { x:11.0, y:0.32, w:1.0, h:0.42, fill:{color:RED}, line:{color:RED,width:0}, rectRadius:0.1 });
-      s.addText('🚨 FLAGGED', { x:11.0, y:0.32, w:1.0, h:0.42, fontSize:8, bold:true, color:WHITE, align:'center', valign:'middle', margin:0 });
+      s.addShape(pres.shapes.RECTANGLE,{x:10.85,y:tagY,w:1.0,h:0.34,fill:{color:RED},line:{color:RED,width:0},rectRadius:0.07});
+      s.addText('🚨 FLAGGED',{x:10.85,y:tagY,w:1.0,h:0.34,fontSize:7.5,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
     }
+    s.addShape(pres.shapes.RECTANGLE,{x:7.1,y:tagY,w:0.88,h:0.3,fill:{color:p.region==='UK'?'1E40AF':'92400E'},line:{color:NAVY,width:0},rectRadius:0.06});
+    s.addText(`${p.region==='UK'?'🇬🇧':'🇺🇸'} ${p.region}`,{x:7.1,y:tagY,w:0.88,h:0.3,fontSize:7.5,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
+    s.addShape(pres.shapes.RECTANGLE,{x:8.08,y:tagY,w:0.88,h:0.3,fill:{color:p.type==='NPD'?'5B21B6':'166534'},line:{color:NAVY,width:0},rectRadius:0.06});
+    s.addText(p.type,{x:8.08,y:tagY,w:0.88,h:0.3,fontSize:7.5,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
+    // Name + meta
+    const nFs = p.name.length>32?17:p.name.length>24?19:21;
+    s.addText(p.name,{x:0.35,y:0.04,w:8.5,h:0.52,fontSize:nFs,bold:true,color:WHITE,fontFace:'Georgia',margin:0});
+    const catEmoji=(p.category||'drinks')==='drinks'?'🥤':'💊';
+    const meta=[p.owner?`👤 ${p.owner}`:null,p.supplier?`🏭 ${p.supplier}`:null,p.manufacturer?`🔧 ${p.manufacturer}`:null,`${catEmoji} ${(p.category||'drinks')==='drinks'?'Drinks':'Supps'}`].filter(Boolean);
+    s.addText(meta.join('   '),{x:0.35,y:0.59,w:10,h:0.24,fontSize:8.5,color:PINK,margin:0});
 
-    // Region / type tags
-    s.addShape(pres.shapes.RECTANGLE, { x:7.0, y:0.35, w:0.9, h:0.36, fill:{color:p.region==='UK'?'1E40AF':'92400E'}, line:{color:NAVY,width:0}, rectRadius:0.08 });
-    s.addText(p.region, { x:7.0, y:0.35, w:0.9, h:0.36, fontSize:9, bold:true, color:WHITE, align:'center', valign:'middle', margin:0 });
-    s.addShape(pres.shapes.RECTANGLE, { x:8.0, y:0.35, w:0.9, h:0.36, fill:{color:p.type==='NPD'?'5B21B6':'166534'}, line:{color:NAVY,width:0}, rectRadius:0.08 });
-    s.addText(p.type, { x:8.0, y:0.35, w:0.9, h:0.36, fontSize:9, bold:true, color:WHITE, align:'center', valign:'middle', margin:0 });
+    // ── MILESTONES — prominent section ──
+    const msY = HDR_H + 0.1;
+    const MS_BAND_H = 1.8;
+    const SH = 9.5;
 
-    // Project name
-    s.addText(p.name, { x:0.35, y:0.08, w:6.5, h:0.7, fontSize:26, bold:true, color:WHITE, fontFace:'Georgia', margin:0 });
-    s.addText(`Owner: ${p.owner||'—'}  |  ${(p.category||'drinks')==='drinks'?'Drinks':'Supps'}`, { x:0.35, y:0.82, w:6.5, h:0.35, fontSize:10, color:PINK, margin:0 });
+    // White background band for critical path
+    s.addShape(pres.shapes.RECTANGLE,{x:0.18,y:msY,w:13.12,h:MS_BAND_H,fill:{color:'FFFFFF'},line:{color:'E8DEF0',width:0.75}});
 
-    // ── PROGRESS BAR ──
-    const barY = 1.42;
-    s.addText(`Progress: ${pct}%`, { x:0.35, y:barY-0.25, w:3, h:0.28, fontSize:10, bold:true, color:NAVY, margin:0 });
-    s.addShape(pres.shapes.RECTANGLE, { x:0.35, y:barY, w:12.6, h:0.18, fill:{color:'E2E8F0'}, line:{color:'E2E8F0',width:0} });
-    if(pct>0) s.addShape(pres.shapes.RECTANGLE, { x:0.35, y:barY, w:Math.max(0.05, 12.6*pct/100), h:0.18, fill:{color:CHERRY}, line:{color:CHERRY,width:0} });
+    // Section label — bigger
+    s.addText('🗓  CRITICAL PATH',{x:0.35,y:msY+0.1,w:6,h:0.28,fontSize:11,bold:true,color:NAVY,charSpacing:1,margin:0});
 
-    // ── MILESTONES ──
-    const msY = 1.82;
-    s.addText('CRITICAL PATH', { x:0.35, y:msY, w:6, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
+    const msEmojis={'Gate 1':'🚪','Recipe Sign Off':'📝','Gate 2':'🚪','MPC Creation':'📦','Artwork FTP':'🎨','Ingredient PO':'🧪','Gate 3':'🚪','First Production':'🏭','RTO':'✅','Digital Launch Date':'💻','Retail Launch Date':'🛒','Marketing Launch Date':'📣'};
     const msW = 12.6 / MS.length;
-    MS.forEach((ms, i) => {
-      const m   = p.milestones[ms]||{};
-      const done= m.done;
-      const od  = !done && m.date && dayDiff(m.date)<0;
-      const isActive = ms === MS.find(k=>!p.milestones[k]?.done);
-      const cx  = 0.35 + i*msW + msW/2;
-      const dotColor = done ? CHERRY : od ? RED : isActive ? NAVY : 'CBD5E1';
-      const txtColor = done ? NAVY : od ? RED : isActive ? NAVY : GRAY;
+    const dotY2 = msY + 0.52;
+    const DOT_R = 0.17;
 
-      // connector line
-      if(i>0){
-        const lx = 0.35 + i*msW;
-        s.addShape(pres.shapes.LINE, { x:lx-msW*0.35, y:msY+0.62, w:msW*0.7, h:0, line:{color:done?CHERRY:'CBD5E1',width:1.5} });
+    // Draw connector lines first so dots render on top
+    MS.forEach((ms,i)=>{
+      if(i===0) return;
+      const m=p.milestones[ms]||{};
+      const done=m.done;
+      const lx=0.35+i*msW;
+      const cx=0.35+i*msW+msW/2;
+      const dotCY=dotY2+DOT_R;
+      s.addShape(pres.shapes.LINE,{x:lx-msW*0.35,y:dotCY,w:msW*0.7,h:0,line:{color:done?CHERRY:'CBD5E1',width:2}});
+    });
+
+    // Now draw dots and labels on top of lines
+    MS.forEach((ms,i)=>{
+      const m=p.milestones[ms]||{};
+      const done=m.done, od=!done&&m.date&&dayDiff(m.date)<0;
+      const isActive=ms===MS.find(k=>!p.milestones[k]?.done);
+      const cx=0.35+i*msW+msW/2;
+      const dc=done?CHERRY:od?RED:isActive?NAVY:'CBD5E1';
+      const tc=done?NAVY:od?RED:isActive?NAVY:GRAY;
+
+      // Glow ring for active milestone — drawn before dot so dot sits on top
+      if(isActive){
+        s.addShape(pres.shapes.OVAL,{x:cx-DOT_R-0.07,y:dotY2-0.07,w:(DOT_R+0.07)*2,h:(DOT_R+0.07)*2,fill:{color:'EDE9FE'},line:{color:NAVY,width:1.5}});
       }
-      // dot
-      s.addShape(pres.shapes.OVAL, { x:cx-0.14, y:msY+0.48, w:0.28, h:0.28, fill:{color:dotColor}, line:{color:dotColor,width:0} });
-      if(done) s.addText('✓', { x:cx-0.14, y:msY+0.48, w:0.28, h:0.28, fontSize:8, color:WHITE, align:'center', valign:'middle', bold:true, margin:0 });
-      // label
-      s.addText(ms, { x:cx-msW*0.42, y:msY+0.82, w:msW*0.84, h:0.32, fontSize:6.5, color:txtColor, align:'center', margin:0, bold:isActive });
-      if(m.date) s.addText(fmtD(m.date), { x:cx-msW*0.42, y:msY+1.16, w:msW*0.84, h:0.22, fontSize:6, color:od?RED:GRAY, align:'center', margin:0 });
+      // Dot
+      s.addShape(pres.shapes.OVAL,{x:cx-DOT_R,y:dotY2,w:DOT_R*2,h:DOT_R*2,fill:{color:dc},line:{color:dc,width:0}});
+      if(done) s.addText('✓',{x:cx-DOT_R,y:dotY2,w:DOT_R*2,h:DOT_R*2,fontSize:9,color:WHITE,align:'center',valign:'middle',bold:true,margin:0});
+      // Label
+      s.addText(`${msEmojis[ms]||''} ${ms}`.trim(),{x:cx-msW*0.46,y:dotY2+DOT_R*2+0.07,w:msW*0.92,h:0.28,fontSize:6.5,color:tc,align:'center',margin:0,bold:isActive});
+      // Date
+      if(m.date) s.addText(fmtD(m.date),{x:cx-msW*0.42,y:dotY2+DOT_R*2+0.37,w:msW*0.84,h:0.22,fontSize:6.5,color:od?RED:'1C1C4C',align:'center',margin:0,bold:od});
     });
 
-    // ── TWO COLUMN LAYOUT ──
-    const colY  = 3.45;
-    const colH  = 3.9;
-    const col1X = 0.35;
-    const col2X = 7.05;
-    const colW  = 6.4;
+    // ── BODY: three columns — pushed below critical path band ──
+    const bodyY = msY + MS_BAND_H + 0.12;
+    const FOOTER = 7.18;
+    const bodyH = FOOTER - bodyY - 0.05;
+    const C1X=0.35, C2X=4.7, C3X=8.9, CW=4.1;
 
-    // col divider
-    s.addShape(pres.shapes.LINE, { x:6.9, y:colY, w:0, h:colH, line:{color:'E2E8F0',width:1} });
+    s.addShape(pres.shapes.LINE,{x:C2X-0.1,y:bodyY,w:0,h:bodyH,line:{color:'D1C4E9',width:0.75}});
+    s.addShape(pres.shapes.LINE,{x:C3X-0.1,y:bodyY,w:0,h:bodyH,line:{color:'D1C4E9',width:0.75}});
 
-    // ── LEFT COLUMN: Launch Dates + SKUs ──
-    s.addText('LAUNCH DATES', { x:col1X, y:colY, w:colW, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
-
-    const launchItems = [
-      { icon:'💻', label:'Digital', val: p.digitalLaunch ? fmtD(p.digitalLaunch) : 'TBC' },
-      { icon:'📣', label:'Marketing', val: p.marketingLaunch ? fmtD(p.marketingLaunch) : 'TBC' },
-    ];
-    (p.retailLaunches||[]).forEach(r => launchItems.push({ icon:'🛒', label:r.retailer, val: r.date ? fmtD(r.date) : 'TBC' }));
-
-    launchItems.forEach((item, i) => {
-      const ly = colY + 0.38 + i*0.38;
-      s.addShape(pres.shapes.RECTANGLE, { x:col1X, y:ly, w:colW, h:0.32, fill:{color:'F1EBF5'}, line:{color:'E2E8F0',width:0} });
-      s.addText(`${item.icon}  ${item.label}`, { x:col1X+0.1, y:ly+0.04, w:2.5, h:0.24, fontSize:9, color:NAVY, bold:true, margin:0 });
-      s.addText(item.val, { x:col1X+2.7, y:ly+0.04, w:3.5, h:0.24, fontSize:9, color:NAVY, margin:0 });
+    // ── COL 1: Launch + SKUs ──
+    let cy1=bodyY;
+    s.addText('🚀  LAUNCH DATES',{x:C1X,y:cy1,w:CW,h:0.24,fontSize:SH,bold:true,color:NAVY,charSpacing:1,margin:0});
+    cy1+=0.26;
+    const li=[];
+    if(p.digitalLaunch)   li.push({icon:'💻',label:'Digital',   val:fmtD(p.digitalLaunch)});
+    if(p.marketingLaunch) li.push({icon:'📣',label:'Marketing', val:fmtD(p.marketingLaunch)});
+    (p.retailLaunches||[]).forEach(r=>{if(r.date) li.push({icon:'🛒',label:r.retailer,val:fmtD(r.date)});});
+    if(p.rtoSea) li.push({icon:'🚢',label:'Sea RTO',val:fmtD(p.rtoSea)});
+    if(p.rtoAir) li.push({icon:'✈️',label:'Air RTO',val:fmtD(p.rtoAir)});
+    if(!li.length) li.push({icon:'📅',label:'No launch dates set',val:''});
+    li.forEach((item,i)=>{
+      const RH=0.26;
+      s.addShape(pres.shapes.RECTANGLE,{x:C1X,y:cy1,w:CW,h:RH,fill:{color:i%2===0?'FFFFFF':'F1EBF5'},line:{color:'E8DEF0',width:0.5}});
+      s.addText(`${item.icon} ${item.label}`,{x:C1X+0.07,y:cy1+0.05,w:CW*0.54,h:RH-0.08,fontSize:8,color:NAVY,bold:true,margin:0});
+      s.addText(item.val,{x:C1X+CW*0.56,y:cy1+0.05,w:CW*0.41,h:RH-0.08,fontSize:8,color:NAVY,margin:0});
+      cy1+=RH;
     });
-
-    // SKUs
-    const skuY = colY + 0.38 + Math.max(launchItems.length, 1)*0.38 + 0.25;
-    s.addText('RANGE ARCHITECTURE', { x:col1X, y:skuY, w:colW, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
-    const skus = p.skus||[];
+    cy1+=0.1;
+    s.addText('📦  RANGE ARCHITECTURE',{x:C1X,y:cy1,w:CW,h:0.24,fontSize:SH,bold:true,color:NAVY,charSpacing:1,margin:0});
+    cy1+=0.26;
+    const skus=p.skus||[];
+    const skuTE={'Single':'1️⃣','Mixed Pack':'🔀','Hero SKU':'⭐','Multipack':'📦','Gift Set':'🎁','Starter Pack':'🌱'};
     if(skus.length){
-      skus.slice(0,5).forEach((sku,i) => {
-        const sy = skuY + 0.35 + i*0.34;
-        s.addShape(pres.shapes.RECTANGLE, { x:col1X, y:sy, w:colW, h:0.28, fill:{color:i%2===0?'F9F4F7':'F1EBF5'}, line:{color:'E2E8F0',width:0} });
-        s.addText(sku.name||'—', { x:col1X+0.1, y:sy+0.04, w:3.0, h:0.2, fontSize:8, color:NAVY, bold:true, margin:0 });
-        s.addText(sku.code||'—', { x:col1X+3.2, y:sy+0.04, w:1.5, h:0.2, fontSize:7.5, color:GRAY, margin:0 });
-        s.addText(sku.type||'—', { x:col1X+4.8, y:sy+0.04, w:1.5, h:0.2, fontSize:7.5, color:PURPLE, bold:true, margin:0 });
+      skus.forEach((sku,i)=>{
+        if(cy1+0.24>FOOTER) return;
+        const RH=0.25;
+        s.addShape(pres.shapes.RECTANGLE,{x:C1X,y:cy1,w:CW,h:RH,fill:{color:i%2===0?'FFFFFF':'F1EBF5'},line:{color:'E8DEF0',width:0.5}});
+        const snFs=(sku.name||'').length>28?6.5:7.5;
+        s.addText(sku.name||'—',{x:C1X+0.07,y:cy1+0.04,w:CW*0.52,h:RH-0.07,fontSize:snFs,color:NAVY,bold:true,margin:0});
+        s.addText(sku.code||'',{x:C1X+CW*0.54,y:cy1+0.04,w:CW*0.25,h:RH-0.07,fontSize:6.5,color:GRAY,margin:0});
+        s.addText(`${skuTE[sku.type]||''} ${sku.type||''}`,{x:C1X+CW*0.79,y:cy1+0.04,w:CW*0.19,h:RH-0.07,fontSize:6.5,color:PURPLE,bold:true,margin:0});
+        cy1+=RH;
       });
     } else {
-      s.addText('No SKUs added yet', { x:col1X+0.1, y:skuY+0.35, w:colW, h:0.3, fontSize:9, color:GRAY, italic:true, margin:0 });
+      s.addText('No SKUs added',{x:C1X+0.07,y:cy1,w:CW,h:0.26,fontSize:8,color:GRAY,italic:true,margin:0});
     }
 
-    // ── RIGHT COLUMN: Notes + Docs + Status ──
-    s.addText('PROJECT UPDATES', { x:col2X, y:colY, w:colW, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
-    const devNote = (p.devNotes||'').trim() || 'No project updates added.';
-    s.addShape(pres.shapes.RECTANGLE, { x:col2X, y:colY+0.32, w:colW, h:1.1, fill:{color:'F1EBF5'}, line:{color:'E2E8F0',width:0} });
-    s.addText(devNote.slice(0,220)+(devNote.length>220?'…':''), { x:col2X+0.12, y:colY+0.38, w:colW-0.24, h:0.98, fontSize:9, color:NAVY, margin:0, wrap:true });
-
-    s.addText('A-TEAM NOTES', { x:col2X, y:colY+1.55, w:colW, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
-    const aNote = (p.ateamNotes||'').trim() || 'No A-team notes added.';
-    s.addShape(pres.shapes.RECTANGLE, { x:col2X, y:colY+1.87, w:colW, h:0.9, fill:{color:'EDE9FE'}, line:{color:'E2E8F0',width:0} });
-    s.addText(aNote.slice(0,180)+(aNote.length>180?'…':''), { x:col2X+0.12, y:colY+1.93, w:colW-0.24, h:0.78, fontSize:9, color:NAVY, margin:0, wrap:true });
-
-    // Signed off docs
-    s.addText('SIGNED OFF DOCUMENTS', { x:col2X, y:colY+2.9, w:colW, h:0.28, fontSize:8, bold:true, color:GRAY, charSpacing:2, margin:0 });
-    const docs = [
-      { label:'Recipe', url: p.recipeUrl },
-      { label:'Specification', url: p.specUrl },
-      { label:'Agreed Pricing', url: p.pricingUrl },
-    ];
-    docs.forEach((doc, i) => {
-      const dx = col2X + i*2.15;
-      const docColor = doc.url ? GREEN : GRAY;
-      s.addShape(pres.shapes.RECTANGLE, { x:dx, y:colY+3.24, w:2.0, h:0.32, fill:{color:doc.url?'DCFCE7':'F1F5F9'}, line:{color:'E2E8F0',width:0} });
-      s.addText(`${doc.url?'✓':'–'}  ${doc.label}`, { x:dx+0.08, y:colY+3.24, w:1.84, h:0.32, fontSize:8, color:docColor, bold:!!doc.url, valign:'middle', margin:0 });
+    // ── COL 2: Project Updates ──
+    s.addText('📋  PROJECT UPDATES',{x:C2X,y:bodyY,w:CW,h:0.24,fontSize:SH,bold:true,color:NAVY,charSpacing:1,margin:0});
+    const devNote=(p.devNotes||'').trim()||'No project updates added.';
+    const nbH=bodyH-0.28;
+    s.addShape(pres.shapes.RECTANGLE,{x:C2X,y:bodyY+0.26,w:CW,h:nbH,fill:{color:'F1EBF5'},line:{color:'E8DEF0',width:0.5}});
+    const noteLines=devNote.split('\n').map(l=>l.trim()).filter(Boolean);
+    const noteFs2=noteLines.length>8?7:noteLines.length>5?7.5:8.5;
+    // Render each line as its own text box with a bullet character
+    const lineH = Math.min(0.32, (nbH-0.1)/Math.max(noteLines.length,1));
+    noteLines.forEach((line,i)=>{
+      const ly=bodyY+0.3+i*lineH;
+      if(ly+lineH>bodyY+0.26+nbH) return;
+      // Bullet dot
+      s.addText('●',{x:C2X+0.1,y:ly,w:0.18,h:lineH,fontSize:5,color:CHERRY,valign:'top',margin:0});
+      // Line text
+      s.addText(line,{x:C2X+0.28,y:ly,w:CW-0.36,h:lineH,fontSize:noteFs2,color:NAVY,wrap:true,valign:'top',margin:0});
     });
+    if(!noteLines.length){
+      s.addText('No project updates added.',{x:C2X+0.1,y:bodyY+0.36,w:CW-0.2,h:0.28,fontSize:8.5,color:GRAY,italic:true,margin:0});
+    }
+
+    // ── COL 3: COGs — horizontal table (SKUs across top, rows = cost lines) ──
+    s.addText('💰  COGs BREAKDOWN',{x:C3X,y:bodyY,w:CW,h:0.24,fontSize:SH,bold:true,color:NAVY,charSpacing:1,margin:0});
+    const cogs=p.cogs||[];
+    const cogLines=[
+      {key:'ingredients',label:'🧪 Ingredients',optional:false},
+      {key:'packaging',  label:'📦 Packaging',  optional:false},
+      {key:'rework',     label:'🔧 Rework',     optional:false},
+      {key:'freight',    label:'🚢 Freight',    optional:true },
+      {key:'tariffs',    label:'📋 Tariffs',    optional:true },
+    ];
+
+    if(cogs.length){
+      const maxC=Math.min(cogs.length,4);
+      // All rows needed (union of optional lines present across any SKU)
+      const visRows=cogLines.filter(l=>!l.optional||cogs.some(c=>c[l.key]));
+      // Add total + target rows
+      const hasTarget=cogs.some(c=>c.targetCog);
+      const totalRows=visRows.length+1+(hasTarget?2:0); // lines + total + (target + banner)
+      const tblY=bodyY+0.26;
+      const availH=bodyH-0.28;
+      const RH=Math.min(0.28, availH/(totalRows+1));
+      // Label column width + value cols
+      const lblW=CW*0.38;
+      const valW=(CW-lblW)/maxC;
+
+      // Pink header row — "Product" label + SKU names across top
+      s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:tblY,w:CW,h:RH,fill:{color:'F8BED5'},line:{color:'E8DEF0',width:0.5}});
+      s.addText('Product',{x:C3X+0.05,y:tblY+0.04,w:lblW,h:RH-0.07,fontSize:7,bold:true,color:NAVY,margin:0});
+      cogs.slice(0,maxC).forEach((c,ci)=>{
+        const vx=C3X+lblW+ci*valW;
+        const skuShort=(c.skuName||'SKU').length>14?(c.skuName||'SKU').slice(0,13)+'…':(c.skuName||'SKU');
+        s.addText(skuShort,{x:vx+0.02,y:tblY+0.04,w:valW-0.04,h:RH-0.07,fontSize:7,bold:true,color:NAVY,align:'center',margin:0});
+      });
+
+      let ry=tblY+RH;
+
+      // Cost line rows
+      visRows.forEach((line,ri)=>{
+        const bg=ri%2===0?'FFFFFF':'F9F4F7';
+        s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:ry,w:CW,h:RH,fill:{color:bg},line:{color:'E8DEF0',width:0.5}});
+        s.addText(line.label,{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7,color:GRAY,margin:0});
+        cogs.slice(0,maxC).forEach((c,ci)=>{
+          const vx=C3X+lblW+ci*valW;
+          const val=c[line.key]?`£${parseFloat(c[line.key]).toFixed(2)}`:'—';
+          s.addText(val,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7.5,color:NAVY,bold:true,align:'center',margin:0});
+        });
+        ry+=RH;
+      });
+
+      // Divider line
+      s.addShape(pres.shapes.LINE,{x:C3X,y:ry,w:CW,h:0,line:{color:'94A3B8',width:1.5}});
+      ry+=0.04;
+
+      // Total COG row — navy
+      s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:ry,w:CW,h:RH,fill:{color:NAVY},line:{color:NAVY,width:0}});
+      s.addText('Total COG',{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7.5,bold:true,color:WHITE,margin:0});
+      cogs.slice(0,maxC).forEach((c,ci)=>{
+        const vx=C3X+lblW+ci*valW;
+        const tot=c.totalCog?`£${parseFloat(c.totalCog).toFixed(2)}`:'—';
+        s.addText(tot,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7.5,bold:true,color:'F8BED5',align:'center',margin:0});
+      });
+      ry+=RH;
+
+      if(hasTarget){
+        // Target row
+        s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:ry,w:CW,h:RH,fill:{color:'EDE9FE'},line:{color:'E8DEF0',width:0.5}});
+        s.addText('🎯 Target COG',{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7,bold:true,color:PURPLE,margin:0});
+        cogs.slice(0,maxC).forEach((c,ci)=>{
+          const vx=C3X+lblW+ci*valW;
+          const tgt=c.targetCog?`£${parseFloat(c.targetCog).toFixed(2)}`:'—';
+          s.addText(tgt,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7,bold:true,color:PURPLE,align:'center',margin:0});
+        });
+        ry+=RH;
+
+        // Target met/missed banner per SKU
+        s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:ry,w:lblW,h:RH,fill:{color:'F9F4F7'},line:{color:'E8DEF0',width:0.5}});
+        s.addText('vs Target',{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7,color:GRAY,italic:true,margin:0});
+        cogs.slice(0,maxC).forEach((c,ci)=>{
+          if(!c.targetCog) return;
+          const vx=C3X+lblW+ci*valW;
+          const hit=parseFloat(c.totalCog||0)<=parseFloat(c.targetCog);
+          s.addShape(pres.shapes.RECTANGLE,{x:vx+0.03,y:ry+0.04,w:valW-0.06,h:RH-0.08,fill:{color:hit?GREEN:RED},line:{color:hit?GREEN:RED,width:0}});
+          s.addText(hit?'✅ MET':'❌ OVER',{x:vx+0.03,y:ry+0.05,w:valW-0.06,h:RH-0.1,fontSize:6.5,bold:true,color:WHITE,align:'center',margin:0});
+        });
+      }
+    } else {
+      s.addShape(pres.shapes.RECTANGLE,{x:C3X,y:bodyY+0.26,w:CW,h:0.4,fill:{color:'F9F4F7'},line:{color:'E8DEF0',width:0.5}});
+      s.addText('No COGs data added yet',{x:C3X+0.09,y:bodyY+0.36,w:CW-0.18,h:0.22,fontSize:8,color:GRAY,italic:true,margin:0});
+    }
 
     // Footer
-    s.addShape(pres.shapes.RECTANGLE, { x:0, y:7.2, w:13.3, h:0.3, fill:{color:NAVY}, line:{color:NAVY,width:0} });
-    s.addText(`TRIP Confidential  |  ${p.name}  |  ${(p.category||'drinks').toUpperCase()}  ·  ${p.region}  ·  ${p.type}`, { x:0.35, y:7.22, w:10, h:0.26, fontSize:7.5, color:PINK, margin:0 });
-    s.addText(`Generated ${new Date().toLocaleDateString('en-GB')}`, { x:10.5, y:7.22, w:2.6, h:0.26, fontSize:7.5, color:PINK, align:'right', margin:0 });
+    s.addShape(pres.shapes.RECTANGLE,{x:0,y:7.2,w:13.3,h:0.3,fill:{color:NAVY},line:{color:NAVY,width:0}});
+    s.addText(`TRIP Confidential  |  ${p.name}  |  ${(p.category||'drinks').toUpperCase()}  ·  ${p.region}  ·  ${p.type}`,{x:0.35,y:7.22,w:10,h:0.26,fontSize:7.5,color:PINK,margin:0});
+    s.addText(`Generated ${new Date().toLocaleDateString('en-GB')}`,{x:10.5,y:7.22,w:2.6,h:0.26,fontSize:7.5,color:PINK,align:'right',margin:0});
   }
+
+
+
 
   // ── BUILD DECK ──
   const groups = [
@@ -1738,8 +2064,9 @@ function exportPPT(){
       s.addShape(pres.shapes.RECTANGLE, { x:0, y:rowY, w:0.06, h:ROW_H-0.04, fill:{color:sc}, line:{color:sc,width:0} });
 
       // Project name + meta
-      const shortName = p.name.length > 24 ? p.name.slice(0,23)+'…' : p.name;
-      s.addText(shortName, { x:0.12, y:rowY+0.02, w:LBL_W-0.22, h:ROW_H*0.48, fontSize:8, bold:true, color:NAVY, margin:0 });
+      const shortName = p.name;
+      const snFs = p.name.length > 28 ? 7 : 8;
+      s.addText(shortName, { x:0.12, y:rowY+0.02, w:LBL_W-0.22, h:ROW_H*0.52, fontSize:snFs, bold:true, color:NAVY, margin:0, wrap:true });
       s.addText(`${p.region} · ${p.type} · ${Math.round(pct*100)}%`, { x:0.12, y:rowY+ROW_H*0.48, w:LBL_W-0.22, h:ROW_H*0.4, fontSize:6.5, color:GRAY, margin:0 });
 
       // Label column divider
