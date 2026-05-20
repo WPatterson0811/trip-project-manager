@@ -357,6 +357,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--cherry);}
     <button class="btn-hdr" onclick="exportCSV()">⬇ Export CSV</button>
     <button class="btn-hdr" onclick="exportPPT()" style="background:rgba(233,164,196,0.18);border-color:rgba(233,164,196,0.3);">📊 Export PPT</button>
     <button class="btn-hdr" id="bulkBtn" onclick="toggleBulkMode()">☑ Bulk Edit</button>
+    <button class="btn-hdr" id="syncBtn" onclick="manualSync()" style="background:rgba(134,239,172,0.15);border-color:rgba(134,239,172,0.3);color:#86efac;" title="Save & sync all changes now">💾 Save & Sync</button>
     <button class="btn-hdr" onclick="resetData()" style="color:rgba(248,190,213,0.5);border-color:rgba(248,190,213,0.12);" title="Clear saved data and reload default projects">↺ Reset</button>
     <button class="btn-add" onclick="openAddModal()">+ New Project <span class="kbd-hint">N</span></button>
   </div>
@@ -834,6 +835,7 @@ function renderCogsSection(p){
     <div style="padding:12px;font-size:11px;color:var(--gray);text-align:center;opacity:.7">No COGs data yet — click Edit to add</div></div>`;
 
   const rows = cogs.map(c => {
+    const sym = c.currency==='USD' ? '$' : '£';
     const total = c.totalCog||0;
     const target = c.targetCog||0;
     const hit = target && parseFloat(total)<=parseFloat(target);
@@ -841,16 +843,16 @@ function renderCogsSection(p){
       ? `<span class="${hit?'cogs-target-hit':'cogs-target-miss'}">${hit?'✓ On target':'✗ Over target'}</span>`
       : '—';
     const breakdown = [
-      c.ingredients ? `Ingredients: £${c.ingredients}` : null,
-      c.packaging   ? `Packaging: £${c.packaging}` : null,
-      c.rework      ? `Rework: £${c.rework}` : null,
-      c.freight     ? `Freight: £${c.freight}` : null,
-      c.tariffs     ? `Tariffs: £${c.tariffs}` : null,
+      c.ingredients ? `Ingredients: ${sym}${c.ingredients}` : null,
+      c.packaging   ? `Packaging: ${sym}${c.packaging}` : null,
+      c.rework      ? `Rework: ${sym}${c.rework}` : null,
+      c.freight     ? `Freight: ${sym}${c.freight}` : null,
+      c.tariffs     ? `Tariffs: ${sym}${c.tariffs}` : null,
     ].filter(Boolean).join(' · ');
     return `<tr>
-      <td class="cogs-sku-name">${c.skuName||'—'}</td>
-      <td class="cogs-val">£${total||'—'}</td>
-      <td class="cogs-val">${target?'£'+target:'—'}</td>
+      <td class="cogs-sku-name">${c.skuName||'—'} <span style="font-size:9px;color:var(--gray)">(${c.currency||'GBP'})</span></td>
+      <td class="cogs-val">${sym}${total||'—'}</td>
+      <td class="cogs-val">${target?sym+target:'—'}</td>
       <td>${statusHtml}</td>
       <td style="font-size:10px;color:var(--gray)">${breakdown||'—'}</td>
     </tr>`;
@@ -1418,29 +1420,33 @@ function updateRtoFields(){
 }
 
 // ── MODAL COG INPUTS ──
-function addCogInput(skuName='',totalCog='',targetCog='',ingredients='',packaging='',rework='',freight='',tariffs=''){
+function addCogInput(skuName='',totalCog='',targetCog='',ingredients='',packaging='',rework='',freight='',tariffs='',currency='GBP'){
   const hasFreight = !!freight, hasTariffs = !!tariffs;
   const div=document.createElement('div');
   div.className='cogs-modal-row';
   div.innerHTML=`
     <div class="cogs-modal-row-title">
       <input type="text" value="${skuName}" placeholder="SKU Name (e.g. 12 x 250ml MB)" style="flex:1;border:1.5px solid var(--light-gray);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:700;color:var(--navy);outline:none;">
+      <select class="cog-currency-select" style="border:1.5px solid var(--light-gray);border-radius:6px;padding:5px 9px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;margin-left:8px;">
+        <option value="GBP" ${currency==='GBP'?'selected':''}>£ GBP</option>
+        <option value="USD" ${currency==='USD'?'selected':''}>$ USD</option>
+      </select>
       <button type="button" class="retailer-remove" onclick="this.closest('.cogs-modal-row').remove()">×</button>
     </div>
     <div class="cogs-fields">
-      <div class="cogs-field"><label>Total COG (£)</label><input type="number" step="0.01" value="${totalCog}" placeholder="e.g. 1.25"></div>
-      <div class="cogs-field"><label>Target COG (£)</label><input type="number" step="0.01" value="${targetCog}" placeholder="e.g. 1.10"></div>
-      <div class="cogs-field"><label>Ingredients (£)</label><input type="number" step="0.01" value="${ingredients}" placeholder="0.00"></div>
-      <div class="cogs-field"><label>Packaging (£)</label><input type="number" step="0.01" value="${packaging}" placeholder="0.00"></div>
-      <div class="cogs-field"><label>Rework (£)</label><input type="number" step="0.01" value="${rework}" placeholder="0.00"></div>
+      <div class="cogs-field"><label>Total COG</label><input type="number" step="0.01" value="${totalCog}" placeholder="e.g. 1.25"></div>
+      <div class="cogs-field"><label>Target COG</label><input type="number" step="0.01" value="${targetCog}" placeholder="e.g. 1.10"></div>
+      <div class="cogs-field"><label>Ingredients</label><input type="number" step="0.01" value="${ingredients}" placeholder="0.00"></div>
+      <div class="cogs-field"><label>Packaging</label><input type="number" step="0.01" value="${packaging}" placeholder="0.00"></div>
+      <div class="cogs-field"><label>Rework</label><input type="number" step="0.01" value="${rework}" placeholder="0.00"></div>
     </div>
     <div class="cogs-optional-row">
       <label class="cogs-optional-label"><input type="checkbox" ${hasFreight?'checked':''} onchange="toggleCogOptional(this,'freight')" style="accent-color:var(--cherry);width:13px;height:13px;"> Freight</label>
       <label class="cogs-optional-label"><input type="checkbox" ${hasTariffs?'checked':''} onchange="toggleCogOptional(this,'tariffs')" style="accent-color:var(--cherry);width:13px;height:13px;"> Tariffs</label>
     </div>
     <div class="cogs-fields cog-optional-fields" style="margin-top:8px;">
-      <div class="cogs-field cog-opt-freight" style="${hasFreight?'':'display:none'}"><label>Freight (£)</label><input type="number" step="0.01" value="${freight}" placeholder="0.00"></div>
-      <div class="cogs-field cog-opt-tariffs" style="${hasTariffs?'':'display:none'}"><label>Tariffs (£)</label><input type="number" step="0.01" value="${tariffs}" placeholder="0.00"></div>
+      <div class="cogs-field cog-opt-freight" style="${hasFreight?'':'display:none'}"><label>Freight</label><input type="number" step="0.01" value="${freight}" placeholder="0.00"></div>
+      <div class="cogs-field cog-opt-tariffs" style="${hasTariffs?'':'display:none'}"><label>Tariffs</label><input type="number" step="0.01" value="${tariffs}" placeholder="0.00"></div>
     </div>`;
   document.getElementById('cogInputs').appendChild(div);
 }
@@ -1453,8 +1459,10 @@ function getCogsFromModal(){
   return Array.from(document.querySelectorAll('#cogInputs .cogs-modal-row')).map(row=>{
     const inputs = row.querySelectorAll('input[type="number"]');
     const nameInput = row.querySelector('input[type="text"]');
+    const currencySelect = row.querySelector('.cog-currency-select');
     return {
       skuName:     nameInput?.value||'',
+      currency:    currencySelect?.value||'GBP',
       totalCog:    inputs[0]?.value||'',
       targetCog:   inputs[1]?.value||'',
       ingredients: inputs[2]?.value||'',
@@ -1568,7 +1576,7 @@ function openEditModal(id){
   (p.skus||[]).forEach(s=>addSkuInput(s.name,s.code,s.type,s.artworkUrl||''));
   // cogs
   document.getElementById('cogInputs').innerHTML='';
-  (p.cogs||[]).forEach(c=>addCogInput(c.skuName,c.totalCog,c.targetCog,c.ingredients,c.packaging,c.rework,c.freight,c.tariffs));
+  (p.cogs||[]).forEach(c=>addCogInput(c.skuName,c.totalCog,c.targetCog,c.ingredients,c.packaging,c.rework,c.freight,c.tariffs,c.currency||'GBP'));
   document.getElementById('msDatesGrid').innerHTML=buildMsDates(p.milestones);
   updateRtoFields();
   document.getElementById('projectModal').classList.add('open');
@@ -1875,8 +1883,9 @@ function exportPPT(){
       s.addText('Product',{x:C3X+0.05,y:tblY+0.04,w:lblW,h:RH-0.07,fontSize:7,bold:true,color:NAVY,margin:0});
       cogs.slice(0,maxC).forEach((c,ci)=>{
         const vx=C3X+lblW+ci*valW;
+        const sym2=c.currency==='USD'?'$':'£';
         const skuShort=(c.skuName||'SKU').length>14?(c.skuName||'SKU').slice(0,13)+'…':(c.skuName||'SKU');
-        s.addText(skuShort,{x:vx+0.02,y:tblY+0.04,w:valW-0.04,h:RH-0.07,fontSize:7,bold:true,color:NAVY,align:'center',margin:0});
+        s.addText(`${skuShort} (${sym2})`,{x:vx+0.02,y:tblY+0.04,w:valW-0.04,h:RH-0.07,fontSize:7,bold:true,color:NAVY,align:'center',margin:0});
       });
 
       let ry=tblY+RH;
@@ -1888,7 +1897,8 @@ function exportPPT(){
         s.addText(line.label,{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7,color:GRAY,margin:0});
         cogs.slice(0,maxC).forEach((c,ci)=>{
           const vx=C3X+lblW+ci*valW;
-          const val=c[line.key]?`£${parseFloat(c[line.key]).toFixed(2)}`:'—';
+          const sym2=c.currency==='USD'?'$':'£';
+          const val=c[line.key]?`${sym2}${parseFloat(c[line.key]).toFixed(2)}`:'—';
           s.addText(val,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7.5,color:NAVY,bold:true,align:'center',margin:0});
         });
         ry+=RH;
@@ -1903,7 +1913,8 @@ function exportPPT(){
       s.addText('Total COG',{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7.5,bold:true,color:WHITE,margin:0});
       cogs.slice(0,maxC).forEach((c,ci)=>{
         const vx=C3X+lblW+ci*valW;
-        const tot=c.totalCog?`£${parseFloat(c.totalCog).toFixed(2)}`:'—';
+        const sym2=c.currency==='USD'?'$':'£';
+        const tot=c.totalCog?`${sym2}${parseFloat(c.totalCog).toFixed(2)}`:'—';
         s.addText(tot,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7.5,bold:true,color:'F8BED5',align:'center',margin:0});
       });
       ry+=RH;
@@ -1914,7 +1925,8 @@ function exportPPT(){
         s.addText('🎯 Target COG',{x:C3X+0.05,y:ry+0.05,w:lblW,h:RH-0.08,fontSize:7,bold:true,color:PURPLE,margin:0});
         cogs.slice(0,maxC).forEach((c,ci)=>{
           const vx=C3X+lblW+ci*valW;
-          const tgt=c.targetCog?`£${parseFloat(c.targetCog).toFixed(2)}`:'—';
+          const sym2=c.currency==='USD'?'$':'£';
+          const tgt=c.targetCog?`${sym2}${parseFloat(c.targetCog).toFixed(2)}`:'—';
           s.addText(tgt,{x:vx+0.02,y:ry+0.05,w:valW-0.04,h:RH-0.08,fontSize:7,bold:true,color:PURPLE,align:'center',margin:0});
         });
         ry+=RH;
@@ -2148,6 +2160,44 @@ document.addEventListener('keydown',e=>{
 document.getElementById('projectModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeConfirm();});
 window.addEventListener('resize',()=>{ if(currentView==='gantt') render(); });
+
+// ── MANUAL SAVE & SYNC ──
+async function manualSync(){
+  const btn = document.getElementById('syncBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Saving…';
+  btn.style.opacity = '0.6';
+  btn.disabled = true;
+
+  // Force save to sheets
+  const json = JSON.stringify(projects);
+  localStorage.setItem(STORE_KEY, json);
+  await new Promise(resolve => {
+    fetch(SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({data: json})
+    }).catch(()=>{}).finally(resolve);
+  });
+
+  // Wait a moment then reload from sheets so both users see same data
+  await new Promise(r=>setTimeout(r,1500));
+  const loaded = await loadFromSheets();
+
+  if(loaded){
+    btn.innerHTML = '✓ Synced!';
+    btn.style.background = 'rgba(134,239,172,0.3)';
+    render();
+  } else {
+    btn.innerHTML = '✓ Saved locally';
+  }
+  setTimeout(()=>{
+    btn.innerHTML = orig;
+    btn.style.opacity = '1';
+    btn.style.background = '';
+    btn.disabled = false;
+  }, 2500);
+}
 
 // ── RESET ──
 function resetData(){
