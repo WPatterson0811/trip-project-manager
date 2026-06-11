@@ -425,8 +425,8 @@ async function loadFromSheets(){
     if(json.status === 'ok' && json.data && json.data !== '[]' && json.data !== ''){
       const parsed = JSON.parse(json.data);
       if(Array.isArray(parsed) && parsed.length > 0){
-        projects = parsed;
-        localStorage.setItem(STORE_KEY, json.data);
+        projects = mergeProjects(projects, parsed);   // merge, don't overwrite
+        localStorage.setItem(STORE_KEY, JSON.stringify(projects));
         return true;
       }
     }
@@ -434,6 +434,20 @@ async function loadFromSheets(){
   return false;
 }
 
+// Merge an incoming projects array into a local one, newest updatedAt wins per id.
+function mergeProjects(localArr, incomingArr){
+  var byId = {};
+  (localArr||[]).forEach(function(p){ byId[p.id]=p; });
+  (incomingArr||[]).forEach(function(p){
+    var ex = byId[p.id];
+    if(!ex){ byId[p.id]=p; return; }
+    var exT = Date.parse(ex.updatedAt||0)||0;
+    var inT = Date.parse(p.updatedAt||0)||0;
+    if(inT >= exT) byId[p.id]=p;
+  });
+  return Object.keys(byId).map(function(k){return byId[k];})
+    .sort(function(a,b){return (a.id||0)-(b.id||0);});
+}
 function touch(p,msg){
   p.updatedAt=new Date().toISOString();
   if(!p.activityLog)p.activityLog=[];
@@ -1894,6 +1908,8 @@ async function manualSync(){
   btn.style.opacity = '0.6';
   btn.disabled = true;
 
+  // Pull & merge server truth first so we don't push stale data over fresh
+  await loadFromSheets();
   // Force save to sheets
   const json = JSON.stringify(projects);
   localStorage.setItem(STORE_KEY, json);
@@ -2148,8 +2164,8 @@ function resetData(){
       if(json.status==='ok' && json.data && json.data!=='[]'){
         const parsed = JSON.parse(json.data);
         if(Array.isArray(parsed) && parsed.length>0){
-          projects = parsed;
-          localStorage.setItem(STORE_KEY, json.data);
+          projects = mergeProjects(projects, parsed);
+          localStorage.setItem(STORE_KEY, JSON.stringify(projects));
         }
       }
     } catch(e){}
@@ -2170,8 +2186,8 @@ function resetData(){
         if(json.status==='ok' && json.data && json.data!=='[]'){
           const parsed = JSON.parse(json.data);
           if(Array.isArray(parsed) && parsed.length>0){
-            projects = parsed;
-            localStorage.setItem(STORE_KEY, json.data);
+            projects = mergeProjects(projects, parsed);
+            localStorage.setItem(STORE_KEY, JSON.stringify(projects));
             render();
           }
         }
