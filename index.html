@@ -127,9 +127,19 @@
       <div class="form-group"><label>Owner</label><input type="text" id="f_owner" placeholder="e.g. Liv M."></div>
       <div class="form-group"><label>Supplier</label><input type="text" id="f_supplier" placeholder="e.g. Doehler UK"></div>
       <div class="form-group"><label>Manufacturer</label><input type="text" id="f_manufacturer" placeholder="e.g. Cawston Press"></div>
-      <div class="form-group full"><label>Project Updates</label><textarea id="f_devNotes" rows="2" placeholder="Key updates, decisions, blockers, next steps…"></textarea></div>
-      <div class="form-group full"><label>A-Team Notes</label><textarea id="f_ateamNotes" rows="2" placeholder="A-team actions, feedback, sign-off comments…"></textarea></div>
+      <div class="form-group full"><label>Project Updates</label><textarea id="f_devNotes" rows="5" placeholder="Key updates, decisions, blockers, next steps…"></textarea></div>
+      <div class="form-group full"><label>Reason for Delay / Risk</label><textarea id="f_reasonDelay" rows="2" placeholder="Why is this project at risk or delayed?"></textarea></div>
+      <div class="form-group full">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="f_decisionNeeded" style="accent-color:var(--cherry);width:15px;height:15px;"> Decision Needed
+        </label>
+        <textarea id="f_decisionRequired" rows="2" placeholder="What decision is required, and from whom?" style="margin-top:6px;"></textarea>
+      </div>
     </div>
+
+    <div class="modal-section-title">🧪 Recipe Links (one or more)</div>
+    <div id="recipeInputs"></div>
+    <button class="add-sku-btn" onclick="addRecipeInput()">+ Add Recipe Link</button>
 
     <div class="modal-section-title">📄 Signed Off Documents</div>
     <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
@@ -506,11 +516,12 @@ function renderLaunchStrip(p){
 }
 
 function renderDocsSection(p){
-  const recipe = p.recipeUrl;
   const spec = p.specUrl;
   const pricing = p.pricingUrl;
-  const recipeHtml = recipe
-    ? `<a class="doc-link" href="${recipe}" target="_blank" rel="noopener">📄 View Recipe</a>`
+  // Recipes: support new list (recipeUrls) and legacy single (recipeUrl)
+  const recipeList = (p.recipeUrls && p.recipeUrls.length) ? p.recipeUrls : (p.recipeUrl ? [{label:'Recipe',url:p.recipeUrl}] : []);
+  const recipeHtml = recipeList.length
+    ? recipeList.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener">📄 ${r.label||'View Recipe'}</a>`).join(' ')
     : `<span class="doc-missing">No link added yet</span>`;
   const specHtml = spec
     ? `<a class="doc-link spec" href="${spec}" target="_blank" rel="noopener">📋 View Spec</a>`
@@ -634,7 +645,6 @@ function renderCard(p){
   }).join('');
 
   const devDot=(p.devNotes||'').trim()?'on':'';
-  const aDot=(p.ateamNotes||'').trim()?'on':'';
   const logHtml=(p.activityLog||[]).slice(0,10).map(a=>
     `<div class="activity-item"><span class="a-time">${fmtTs(a.t)}</span><span class="a-text">${a.msg}</span></div>`
   ).join('')||'<div class="activity-item"><span class="a-text" style="opacity:.6">No activity yet.</span></div>';
@@ -672,21 +682,19 @@ function renderCard(p){
     ${renderDocsSection(p)}
     ${renderRangeSection(p)}
     ${renderCogsSection(p)}
+    ${(p.decisionNeeded||p.reasonDelay)?`<div style="margin:0 18px 10px;">`+
+      ((p.decisionNeeded)?`<div style="background:#fef3c7;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:6px;"><span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#92400e;">⚖️ Decision Needed</span>${p.decisionRequired?`<div style="font-size:12px;color:var(--navy);margin-top:3px;">${p.decisionRequired}</div>`:``}</div>`:``)+
+      ((p.reasonDelay)?`<div style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:8px;padding:8px 12px;"><span style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#991b1b;">⚠️ Reason for Delay / Risk</span><div style="font-size:12px;color:var(--navy);margin-top:3px;">${p.reasonDelay}</div></div>`:``)+
+    `</div>`:``}
     <div class="notes-section">
       <div class="notes-tabs">
-        <button class="notes-tab active" id="ntab-dev-${p.id}" onclick="switchTab(${p.id},'dev')">
+        <button class="notes-tab active" style="cursor:default;">
           <span>Project Updates</span><span class="tab-dot ${devDot}"></span>
-        </button>
-        <button class="notes-tab" id="ntab-at-${p.id}" onclick="switchTab(${p.id},'at')">
-          <span>A-Team Notes</span><span class="tab-dot ${aDot}"></span>
         </button>
       </div>
       <div class="notes-panels">
         <div class="notes-panel active" id="np-dev-${p.id}">
-          <textarea class="notes-textarea" placeholder="Key updates, decisions, blockers, next steps…" onblur="saveDevNote(${p.id},this.value)">${p.devNotes||''}</textarea>
-        </div>
-        <div class="notes-panel" id="np-at-${p.id}">
-          <textarea class="notes-textarea" placeholder="A-team actions, feedback, sign-off comments…" onblur="saveAteamNote(${p.id},this.value)">${p.ateamNotes||''}</textarea>
+          <textarea class="notes-textarea" style="min-height:120px;" placeholder="Key updates, decisions, blockers, next steps…" onblur="saveDevNote(${p.id},this.value)">${p.devNotes||''}</textarea>
         </div>
       </div>
     </div>
@@ -846,7 +854,7 @@ function renderGantt(list){
 
       // Project name label
       const nameY = rowY + ROW_H/2 - 5;
-      svg += `<text x="14" y="${nameY}" font-size="11" font-weight="700" fill="${C.navy}">${esc(p.name.length>22?p.name.slice(0,21)+'…':p.name)}</text>`;
+      svg += `<text x="14" y="${nameY}" font-size="11" font-weight="700" fill="${C.navy}">${esc(p.name)}</text>`;
       svg += `<text x="14" y="${nameY+14}" font-size="9" fill="${C.gray}">${esc(p.region)} · ${esc(p.type)} · ${Math.round(Object.values(p.milestones).filter(m=>m.done).length/Object.values(p.milestones).length*100)}%</text>`;
 
       // Status pill
@@ -1088,7 +1096,7 @@ function switchTab(id,tab){
   });
 }
 function saveDevNote(id,val){const p=projects.find(x=>x.id===id);if(!p)return;if(p.devNotes!==val){p.devNotes=val;touch(p,'Project updates saved');save();}}
-function saveAteamNote(id,val){const p=projects.find(x=>x.id===id);if(!p)return;if(p.ateamNotes!==val){p.ateamNotes=val;touch(p,'A-Team notes updated');save();}}
+
 
 // ── ACTIVITY LOG ──
 function toggleActivityLog(id){
@@ -1123,7 +1131,7 @@ function applyBulk(){
 // ── EXPORT CSV ──
 function exportCSV(){
   const hdrs=['Name','Region','Type','Status','Owner','Digital Launch','Marketing Launch','Retail Launches','SKUs','Progress %','Flagged',
-    ...MS.map(m=>m+' Target'),...MS.map(m=>m+' Done'),'Dev Notes','A-Team Notes'];
+    ...MS.map(m=>m+' Target'),...MS.map(m=>m+' Done'),'Dev Notes'];
   const rows=projects.map(p=>[
     p.name,p.region,p.type,statusLabel(p.status),p.owner||'',p.digitalLaunch||'',p.marketingLaunch||'',
     (p.retailLaunches||[]).map(r=>r.retailer+(r.date?' ('+fmtDate(r.date)+')':'')).join(' | '),
@@ -1131,7 +1139,7 @@ function exportCSV(){
     getPct(p),p.flagged?'Yes':'No',
     ...MS.map(m=>p.milestones[m]?.date||''),
     ...MS.map(m=>p.milestones[m]?.done?'Yes':'No'),
-    (p.devNotes||'').replace(/\n/g,' '),(p.ateamNotes||'').replace(/\n/g,' ')
+    (p.devNotes||'').replace(/\n/g,' ')
   ]);
   const csv=[hdrs,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
@@ -1236,6 +1244,23 @@ function getRetailersFromModal(){
   }).filter(r=>r.retailer);
 }
 
+// ── MODAL RECIPE INPUTS ──
+function addRecipeInput(label='',url=''){
+  const div=document.createElement('div');
+  div.className='retailer-input-row';
+  div.innerHTML=`
+    <input type="text" value="${label}" placeholder="Label (e.g. UK Recipe, v2)" style="flex:0 0 200px;">
+    <input type="text" value="${url}" placeholder="https://drive.google.com/…">
+    <button type="button" class="retailer-remove" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('recipeInputs').appendChild(div);
+}
+function getRecipesFromModal(){
+  return Array.from(document.querySelectorAll('#recipeInputs .retailer-input-row')).map(row=>{
+    const inputs=row.querySelectorAll('input');
+    return {label:inputs[0]?.value||'',url:inputs[1]?.value||''};
+  }).filter(r=>r.url);
+}
+
 // ── MODAL SKU INPUTS ──
 function addSkuInput(name='',code='',type='Single',artworkUrl=''){
   const div=document.createElement('div');
@@ -1268,7 +1293,7 @@ function buildMsDates(mls){
 function openAddModal(){
   editingId=null;
   document.getElementById('modalTitle').textContent='New Project';
-  ['f_name','f_owner','f_supplier','f_manufacturer','f_devNotes','f_ateamNotes','f_digitalLaunch','f_marketingLaunch','f_recipeUrl','f_specUrl','f_pricingUrl','f_rtoSea','f_rtoAir'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['f_name','f_owner','f_supplier','f_manufacturer','f_devNotes','f_digitalLaunch','f_marketingLaunch','f_recipeUrl','f_specUrl','f_pricingUrl','f_rtoSea','f_rtoAir'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   ['f_showRecipe','f_showSpec','f_showPricing','f_showDigital','f_showMarketing'].forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=false; });
   ['docField_recipe','docField_spec','docField_pricing','launchField_digital','launchField_marketing'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   document.getElementById('f_category').value=activeCategory;
@@ -1277,6 +1302,10 @@ function openAddModal(){
   document.getElementById('retailerInputs').innerHTML='';
   document.getElementById('skuInputs').innerHTML='';
   document.getElementById('cogInputs').innerHTML='';
+  document.getElementById('recipeInputs').innerHTML='';
+  document.getElementById('f_reasonDelay').value='';
+  document.getElementById('f_decisionNeeded').checked=false;
+  document.getElementById('f_decisionRequired').value='';
   document.getElementById('msDatesGrid').innerHTML=buildMsDates({});
   updateRtoFields();
   document.getElementById('projectModal').classList.add('open');
@@ -1307,7 +1336,7 @@ function openEditModal(id){
   document.getElementById('f_marketingLaunch').value=p.marketingLaunch||'';
   document.getElementById('f_rtoSea').value=p.rtoSea||'';
   document.getElementById('f_rtoAir').value=p.rtoAir||'';
-  document.getElementById('f_devNotes').value=p.devNotes||'';document.getElementById('f_ateamNotes').value=p.ateamNotes||'';
+  document.getElementById('f_devNotes').value=p.devNotes||'';
   // retailers
   document.getElementById('retailerInputs').innerHTML='';
   (p.retailLaunches||[]).forEach(r=>addRetailerInput(r.retailer,r.date));
@@ -1317,6 +1346,13 @@ function openEditModal(id){
   // cogs
   document.getElementById('cogInputs').innerHTML='';
   (p.cogs||[]).forEach(c=>addCogInput(c.skuName,c.totalCog,c.targetCog,c.ingredients,c.packaging,c.rework,c.freight,c.tariffs,c.currency||'GBP'));
+  // recipes (support legacy single recipeUrl)
+  document.getElementById('recipeInputs').innerHTML='';
+  const _recipes = (p.recipeUrls && p.recipeUrls.length) ? p.recipeUrls : (p.recipeUrl ? [{label:'Recipe',url:p.recipeUrl}] : []);
+  _recipes.forEach(r=>addRecipeInput(r.label,r.url));
+  document.getElementById('f_reasonDelay').value=p.reasonDelay||'';
+  document.getElementById('f_decisionNeeded').checked=!!p.decisionNeeded;
+  document.getElementById('f_decisionRequired').value=p.decisionRequired||'';
   document.getElementById('msDatesGrid').innerHTML=buildMsDates(p.milestones);
   updateRtoFields();
   document.getElementById('projectModal').classList.add('open');
@@ -1350,7 +1386,11 @@ function saveProject(){
     p.specUrl=document.getElementById('f_specUrl').value;
     p.pricingUrl=document.getElementById('f_pricingUrl').value;
     p.retailLaunches=retailers;p.skus=skus;p.cogs=cogs;
-    p.devNotes=document.getElementById('f_devNotes').value;p.ateamNotes=document.getElementById('f_ateamNotes').value;
+    p.devNotes=document.getElementById('f_devNotes').value;p.ateamNotes='';
+    p.reasonDelay=document.getElementById('f_reasonDelay').value;
+    p.decisionNeeded=document.getElementById('f_decisionNeeded').checked;
+    p.decisionRequired=document.getElementById('f_decisionRequired').value;
+    p.recipeUrls=getRecipesFromModal();
     p.milestones=mls;touch(p,'Project details updated');
   }else{
     const newId=projects.length?Math.max(...projects.map(x=>x.id))+1:1;
@@ -1367,7 +1407,11 @@ function saveProject(){
       specUrl:document.getElementById('f_specUrl').value,
       pricingUrl:document.getElementById('f_pricingUrl').value,
       retailLaunches:retailers,skus,cogs,
-      devNotes:document.getElementById('f_devNotes').value,ateamNotes:document.getElementById('f_ateamNotes').value,
+      devNotes:document.getElementById('f_devNotes').value,
+      reasonDelay:document.getElementById('f_reasonDelay').value,
+      decisionNeeded:document.getElementById('f_decisionNeeded').checked,
+      decisionRequired:document.getElementById('f_decisionRequired').value,
+      recipeUrls:getRecipesFromModal(),
       flagged:false,updatedAt:now,activityLog:[{t:now,msg:'Project created'}],milestones:mls});
   }
   save();closeModal();render();
@@ -1432,6 +1476,70 @@ function exportPPT(){
     titleSlide.addText(`${cat==='drinks'?'🥤 Drinks':'💊 Supps'}  |  ${catProjects.length} projects  —  ✅ On Track: ${on}  ⚠️ At Risk: ${ar}  🔴 Delayed: ${dl}  🟣 Complete: ${co}`,
       { x:0.7, y:yBase+0.05, w:12, h:0.35, fontSize:11, color:WHITE, bold:false, margin:0 });
   });
+
+  // ── KEY UPDATES SLIDE: at-risk, delayed & decision-needed ──
+  (function addKeyUpdatesSlide(){
+    const flagged = projects.filter(p =>
+      p.status==='at-risk' || p.status==='delayed' || p.decisionNeeded
+    );
+    if(!flagged.length) return;
+
+    const s = pres.addSlide();
+    s.background = { color: LIGHT };
+    // Header band
+    s.addShape(pres.shapes.RECTANGLE, { x:0, y:0, w:13.3, h:0.95, fill:{color:NAVY}, line:{color:NAVY,width:0} });
+    s.addText('Key Updates — Risks, Delays & Decisions', { x:0.4, y:0.16, w:12, h:0.5, fontSize:22, bold:true, color:WHITE, fontFace:'Georgia', margin:0 });
+    s.addText(`${flagged.length} project${flagged.length!==1?'s':''} need attention`, { x:0.4, y:0.62, w:8, h:0.25, fontSize:11, color:PINK, margin:0 });
+
+    // Column headers
+    const TOP = 1.15;
+    const X_NAME=0.4, W_NAME=3.0, X_TAG=3.45, W_TAG=1.5, X_REASON=5.05, W_REASON=7.85;
+    s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:TOP,w:12.7,h:0.34,fill:{color:CHERRY,transparency:55},line:{color:CHERRY,width:0}});
+    s.addText('Project', {x:X_NAME,y:TOP,w:W_NAME,h:0.34,fontSize:9,bold:true,color:NAVY,valign:'middle',margin:0});
+    s.addText('Status',  {x:X_TAG,y:TOP,w:W_TAG,h:0.34,fontSize:9,bold:true,color:NAVY,valign:'middle',margin:0});
+    s.addText('Reason / Decision required', {x:X_REASON,y:TOP,w:W_REASON,h:0.34,fontSize:9,bold:true,color:NAVY,valign:'middle',margin:0});
+
+    // Rows — height adapts to fit up to ~10 comfortably; shrink if more
+    const n = flagged.length;
+    const avail = 7.15 - (TOP+0.4);
+    const rowH = Math.min(0.95, Math.max(0.4, avail / n));
+    let y = TOP + 0.4;
+
+    flagged.forEach((p,i) => {
+      const sc = statusColor(p.status);
+      const bg = i%2===0 ? 'FFFFFF' : 'F4ECF4';
+      s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:y,w:12.7,h:rowH,fill:{color:bg},line:{color:'E8DEF0',width:0.5}});
+      // status accent
+      s.addShape(pres.shapes.RECTANGLE,{x:0.3,y:y,w:0.06,h:rowH,fill:{color:sc},line:{color:sc,width:0}});
+      // name (+ region/type)
+      const nFs = p.name.length>26 ? 8.5 : 10;
+      s.addText(p.name,{x:X_NAME,y:y+0.04,w:W_NAME,h:rowH*0.6,fontSize:nFs,bold:true,color:NAVY,valign:'top',wrap:true,margin:0});
+      s.addText(`${p.region} · ${p.type}`,{x:X_NAME,y:y+rowH*0.58,w:W_NAME,h:rowH*0.4,fontSize:7.5,color:GRAY,valign:'top',margin:0});
+      // status + decision chips
+      let tagY = y+0.06;
+      if(p.status==='at-risk'||p.status==='delayed'){
+        s.addShape(pres.shapes.RECTANGLE,{x:X_TAG,y:tagY,w:W_TAG,h:0.26,fill:{color:sc},line:{color:sc,width:0},rectRadius:0.05});
+        s.addText(statusLabel(p.status).toUpperCase(),{x:X_TAG,y:tagY,w:W_TAG,h:0.26,fontSize:7.5,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
+        tagY += 0.3;
+      }
+      if(p.decisionNeeded){
+        s.addShape(pres.shapes.RECTANGLE,{x:X_TAG,y:tagY,w:W_TAG,h:0.26,fill:{color:AMBER},line:{color:AMBER,width:0},rectRadius:0.05});
+        s.addText('DECISION',{x:X_TAG,y:tagY,w:W_TAG,h:0.26,fontSize:7.5,bold:true,color:WHITE,align:'center',valign:'middle',margin:0});
+      }
+      // reason / decision text
+      const reasonBits = [];
+      if(p.reasonDelay) reasonBits.push(p.reasonDelay);
+      if(p.decisionNeeded && p.decisionRequired) reasonBits.push('Decision: '+p.decisionRequired);
+      const reason = reasonBits.join('  —  ') || '—';
+      const rFs = reason.length>180 ? 7 : reason.length>110 ? 8 : 9;
+      s.addText(reason,{x:X_REASON,y:y+0.05,w:W_REASON,h:rowH-0.1,fontSize:rFs,color:NAVY,valign:'top',wrap:true,margin:0});
+      y += rowH;
+    });
+
+    // Footer
+    s.addShape(pres.shapes.RECTANGLE,{x:0,y:7.2,w:13.3,h:0.3,fill:{color:NAVY},line:{color:NAVY,width:0}});
+    s.addText(`TRIP Confidential  |  Key Updates  |  Generated ${new Date().toLocaleDateString('en-GB')}`,{x:0.35,y:7.22,w:12,h:0.26,fontSize:7.5,color:PINK,margin:0});
+  })();
 
   // ── SECTION DIVIDER helper ──
   function addDivider(title, subtitle){
@@ -1624,7 +1732,7 @@ function exportPPT(){
       cogs.slice(0,maxC).forEach((c,ci)=>{
         const vx=C3X+lblW+ci*valW;
         const sym2=c.currency==='USD'?'$':'£';
-        const skuShort=(c.skuName||'SKU').length>14?(c.skuName||'SKU').slice(0,13)+'…':(c.skuName||'SKU');
+        const skuShort=(c.skuName||'SKU');
         s.addText(`${skuShort} (${sym2})`,{x:vx+0.02,y:tblY+0.04,w:valW-0.04,h:RH-0.07,fontSize:7,bold:true,color:NAVY,align:'center',margin:0});
       });
 
